@@ -19,11 +19,37 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 #ifndef EXECUTER_H_
 #define EXECUTER_H_
 
-int executer_receive (int sock, mensaje * mens, const char *file);
-int executer_send (int sock, mensaje * mens, const char *file);
+typedef enum
+{
+  EXECUTER_MODIFY = 0, EXECUTER_DELETE = 1, EXECUTER_CREATE_DIR = 2
+} executer_operation;
+
+typedef enum
+{
+  EXECUTER_RUNNING = 0, EXECUTER_END = 1, EXECUTER_ERROR = 2
+} executer_result;
+
+typedef struct executer_job executer_job_t;
+
+struct executer_job
+{
+  executer_operation operation;	/* Which operation should i made */
+  int peer_sock;		/* Socket which I/O */
+  char *file;			/* name of file relative */
+  char *realpath;		/* real path of file */
+  struct tm time;		/* time of operation */
+    executer_result (*next_operation) (executer_job_t *);
+  int exists_real;
+  mode_t mode;
+  void *opaque;			/* pointer opaque send to the next operation */
+};
+
+executer_result executer_work (executer_job_t * job, void *opaque);
+
+executer_result executer_receive (int sock, mensaje * mens, const char *file);
+executer_result executer_send (int sock, mensaje * mens, const char *file);
 
 #endif /* EXECUTER_H_ */

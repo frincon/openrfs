@@ -251,7 +251,16 @@ xmp_mkdir (const char *path, mode_t mode)
   res = mkdir (path2, mode);
   free (path2);
   if (res == -1)
-    return -errno;
+    {
+      return -errno;
+    }
+  else
+    {
+      queue_operation op;
+      op.file = path;
+      op.operation = OPENDFS_CREATE_DIR;
+      queue_add_operation (&op);
+    }
 
   return 0;
 }

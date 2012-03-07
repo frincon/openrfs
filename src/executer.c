@@ -32,6 +32,7 @@
 
 #include <sys/types.h>
 #include <fcntl.h>
+#include <libgen.h>
 
 #include "opendfs.h"
 #include "queue.h"
@@ -58,7 +59,31 @@ typedef struct _executer_rs
 {
   int sock;
   int type;
+  char *buf;
+  size_t size;
 } executer_rs;
+
+int
+_executer_read_buffer (int sock, void *buf, size_t size)
+{
+  size_t leido;
+
+  leido = 0;
+  fprintf (stderr, "_executer_read_buffer: leyendo del buffer %i bytes...\n",
+	   size);
+  do
+    {
+      size_t leido2 = read (sock, buf, size);
+      fprintf (stderr, "_executer_read_buffer: leido %i bytes...\n", leido2);
+      if (leido2 == 0)
+	{
+	  return leido;
+	}
+      leido += leido2;
+    }
+  while (leido < size);
+  return leido;
+}
 
 bool
 _executer_send_buffer (int sock, void *buf, size_t size)
@@ -82,13 +107,17 @@ bool
 _executer_send_part (int sock, char *buf, size_t size)
 {
   char *buf2;
-  size_t total = size + sizeof (size_t) + sizeof (_EXECUTER_PART);
+  int operacion;
+  operacion = _EXECUTER_PART;
+  size_t total = size + sizeof (size_t) + sizeof (operacion);
 
   buf2 = malloc (total);
   memset (buf2, 0x0, total);
-  *buf2 = _EXECUTER_PART;
+  memcpy (buf2, &operacion, sizeof (operacion));
+  // *buf2 = _EXECUTER_PART;
   buf2 += sizeof (_EXECUTER_PART);
-  *buf2 = size;
+  memcpy (buf2, &size, sizeof (size));
+  //*buf2 = size;
   buf2 += sizeof (size_t);
   memcpy (buf2, buf, size);
   buf2 -= sizeof (size_t) + sizeof (_EXECUTER_PART);
@@ -151,17 +180,17 @@ _executer_conflict_path (const char *file, char **path)
   *path = path2;
 }
 
-int
-_executer_delete (int sock, mensaje * mens, const char *file)
+executer_result
+_executer_delete (executer_job_t * job)
 {
   int ret;
   struct stat buf;
   char *path;
   char *newpath;
 
-  printf ("executer: _executer_delete: %s\n", file);
+  printf ("executer: _executer_delete: %s\n", job->file);
 
-  _executer_real_path (file, &path);
+  _executer_real_path (job->file, &path);
 
   printf ("executer: _executer_delete: path: %s\n", path);
 
@@ -170,12 +199,12 @@ _executer_delete (int sock, mensaje * mens, const char *file)
   if (ret != 0)
     {
       warn ("No se ha encontrado un fichero a borrar");
-      return EXIT_SUCCESS;
+      return EXECUTER_END;
     }
 
 //Existe, lo movemos, cambiandolo de nombre
 
-  _executer_conflict_path (file, &newpath);
+  _executer_conflict_path (job->file, &newpath);
 
   if (rename (path, newpath) != 0)
     {
@@ -184,43 +213,13 @@ _executer_delete (int sock, mensaje * mens, const char *file)
   free (newpath);
   free (path);
 
-  return EXIT_SUCCESS;
-}
-
-int
-_executer_copy_conflict (const char *file)
-{
-  char *source;
-  char *target;
-  char *command;
-  int ret;
-
-  char copy_command[] = "cp -a %s %s";
-
-// Cojemos los path
-  _executer_real_path (file, &source);
-  _executer_conflict_path (file, &target);
-
-  command =
-    malloc (strlen (copy_command) + strlen (source) + strlen (target) - 4 +
-	    1);
-  sprintf (command, copy_command, source, target);
-
-  ret = system (command);
-
-  free (source);
-  free (target);
-
-  return ret;
-
+  return EXECUTER_END;
 }
 
 rs_result
 _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 {
-
-  static char buff[RS_DEFAULT_BLOCK_LEN];
-  int leido;
+  size_t leido;
   int haymas;
   executer_rs *executer = (executer_rs *) opaque;
 
@@ -228,53 +227,78 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 
   buf2 = 0x0;
 
+  fprintf (stderr, "_executer_in_callback: leyendo del buffer...\n");
+  /* If not process anything, do nothing */
+  if (buf->avail_in == executer->size)
+    return RS_DONE;
+
+  //Si se ha alcanzado al final, se devuelve done
+  if (buf->eof_in)
+    return RS_DONE;
+
+  fprintf (stderr, "_executer_in_callback: Tenemos que leer...\n");
   //Primero copiamos si queda algo
   if (buf->avail_in > 0)
     {
       buf2 = malloc (buf->avail_in);
       memcpy (buf2, buf->next_in, buf->avail_in);
+      fprintf (stderr, "_executer_in_callback: Habia %i bytes...\n",
+	       buf->avail_in);
     }
 
-  memset (&buff, 0x0, RS_DEFAULT_BLOCK_LEN);
-  //Si se ha alcanzado al final, se devuelve done
-  if (buf->eof_in)
-    return RS_DONE;
+  memset (executer->buf, 0x0, executer->size);
 
   if (executer->type == _EXECUTER_SOCKET)
     {
-      //Comprobamos que hay mas datos y los leemos, si no ponemos
-      leido = read (executer->sock, &haymas, sizeof (haymas));
+      fprintf (stderr, "_executer_in_callback: Es un socket...\n");
+      //Comprobamos que hay mas datos y los leemos
+      leido =
+	_executer_read_buffer (executer->sock, &haymas, sizeof (haymas));
       if (leido != sizeof (haymas))
 	error (EXIT_FAILURE, 0, "Error de protocolo");
 
       if (haymas == _EXECUTER_PART)
 	{
+	  fprintf (stderr, "_executer_in_callback: Hay mas...\n");
 	  //Hay mas se lee
 	  size_t size;
 
 	  //Se lee el tamaño
-	  leido = read (executer->sock, &size, sizeof (size));
+	  leido =
+	    _executer_read_buffer (executer->sock, &size, sizeof (size));
 	  if (leido != sizeof (size))
 	    error (EXIT_FAILURE, 0, "Error de protocolo");
 
 	  //Se lee el contenido
 	  char *buf3;
 	  buf3 = malloc (size);
-	  leido = read (executer->sock, buf3, size);
-	  if (leido != sizeof (size))
+	  leido = _executer_read_buffer (executer->sock, buf3, size);
+	  if (leido != size)
 	    error (EXIT_FAILURE, 0, "Error de protocolo");
 
-	  if (size + buf->avail_in > RS_DEFAULT_BLOCK_LEN)
-	    error (EXIT_FAILURE, 0, "Esto hay que arreglarlo!!!");
+	  fprintf (stderr,
+		   "_executer_in_callback: Se han leido %i bytes...\n",
+		   leido);
+
+	  while (size + buf->avail_in > executer->size)
+	    {
+	      // ampliamos el tamaño del executer
+	      executer->size *= 2;
+	      free (executer->buf);
+	      executer->buf = malloc (executer->size);
+	      fprintf (stderr,
+		       "_executer_in_callback: Ampliando el buffer en total a %i bytes\n",
+		       executer->size);
+	    }
 
 	  if (buf->avail_in > 0)
 	    {
 	      //Habia, copiamos
-	      memcpy (&buff, buf2, buf->avail_in);
+	      memcpy (executer->buf, buf2, buf->avail_in);
 	    }
-	  memcpy ((&buff) + buf->avail_in, buf3, size);
+	  memcpy ((executer->buf) + buf->avail_in, buf3, size);
 	  buf->avail_in = size + buf->avail_in;
-	  buf->next_in = &buff;
+	  buf->next_in = executer->buf;
 	  free (buf3);
 	  if (buf2 != 0)
 	    free (buf2);
@@ -282,6 +306,7 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	}
       else
 	{
+	  fprintf (stderr, "_executer_in_callback: NO HAY MAS...\n");
 	  // No hay mas, se envia el final
 	  buf->eof_in = true;
 	  return RS_DONE;
@@ -290,26 +315,32 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
   else
     {
       char *buf3;
-      buf3 = malloc (RS_DEFAULT_BLOCK_LEN - buf->avail_in);
-      leido = read (executer->sock, buf3,
-		    RS_DEFAULT_BLOCK_LEN - buf->avail_in);
+      buf3 = malloc (executer->size - buf->avail_in);
+      leido =
+	_executer_read_buffer (executer->sock, buf3,
+			       executer->size - buf->avail_in);
       if (leido == 0)
 	{
+	  fprintf (stderr,
+		   "_executer_in_callback: Se ha alcanzado el final del fichero\n");
 	  //No hay mas, se envia el final
 	  buf->eof_in = true;
 	  return RS_DONE;
 	}
       else if (leido > 0)
 	{
+	  fprintf (stderr,
+		   "_executer_in_callback: Se han leido %i bytes del fichero\n",
+		   leido);
 	  //Hay mas se envia
 	  if (buf->avail_in > 0)
 	    {
 	      //Habia, copiamos
-	      memcpy (&buff, buf2, buf->avail_in);
+	      memcpy (executer->buf, buf2, buf->avail_in);
 	    }
-	  memcpy ((&buff) + buf->avail_in, buf3, leido);
+	  memcpy ((executer->buf) + buf->avail_in, buf3, leido);
 	  buf->avail_in = leido + buf->avail_in;
-	  buf->next_in = &buff;
+	  buf->next_in = executer->buf;
 	  free (buf3);
 	  if (buf2 != 0)
 	    free (buf2);
@@ -320,32 +351,41 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	  error (EXIT_FAILURE, 0, "Error leyendo el fichero");
 	}
     }
-
 }
 
 rs_result
 _executer_out_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 {
-  static char buff[_EXECUTER_DEFAULT_OUT];
   executer_rs *executer = (executer_rs *) opaque;
 
-  if (buf->avail_out < 20)
+  if (buf->next_out == 0)
     {
+      buf->next_out = executer->buf;
+      buf->avail_out = executer->size;
+    }
+
+  if (buf->avail_out < 20 || (buf->avail_in == 0 && buf->eof_in))
+    {
+      fprintf (stderr,
+	       "_executer_out_callback: Enviando %i butes del buffer...\n",
+	       executer->size - buf->avail_out);
       //Enviamos ya lo que hay
       if (executer->type == _EXECUTER_FILE)
 	{
-	  if (!_executer_send_buffer (executer->sock, &buff,
-				      _EXECUTER_DEFAULT_OUT - buf->avail_out))
+	  if (!_executer_send_buffer
+	      (executer->sock, executer->buf,
+	       executer->size - buf->avail_out))
 	    error (EXIT_FAILURE, 0, "Error escribiendo fichero");
 	}
       else
 	{
-	  if (!_executer_send_part (executer->sock, &buff,
-				    _EXECUTER_DEFAULT_OUT - buf->avail_out))
+	  if (!_executer_send_part
+	      (executer->sock, executer->buf,
+	       executer->size - buf->avail_out))
 	    error (EXIT_FAILURE, 0, "Error escribiendo socket");
 	}
-      buf->avail_out = _EXECUTER_DEFAULT_OUT;
-      buf->next_out = &buff;
+      buf->avail_out = executer->size;
+      buf->next_out = executer->buf;
       return RS_DONE;
     }
   else
@@ -357,75 +397,339 @@ _executer_out_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 }
 
 int
-_executer_send_ok (int sock, mensaje * mens, const char *file, bool conflict)
+_executer_create_temp (const char *realpath, char **temppath)
 {
-  bool exists = false;
-  struct stat bufstat;
-  char *realpath;
+  char *base;
+  char *dir;
+  char *stemp;
 
-  printf ("executer: _executer_send_ok: %s\n", file);
+  stemp = malloc (strlen (realpath) + 1);
+  strcpy (stemp, realpath);
 
-  _executer_real_path (file, &realpath);
+  //wait for delta and patch in same time
+  base = basename (stemp);
+  dir = dirname (stemp);
+  *temppath = malloc (strlen (dir) + 2 + strlen (base) + 1 + 6 + 1);
+  strcpy (*temppath, dir);
+  strcat (*temppath, "/.");
+  strcat (*temppath, base);
+  strcat (*temppath, "-");
+  strcat (*temppath, "XXXXXX");
 
-  exists = !lstat (realpath, &bufstat);
-  // Primero creamos
-  if (conflict && exists)
+  int fd = mkstemp (*temppath);
+  free (stemp);
+  return fd;
+}
+
+executer_result
+_executer_change_permission (executer_job_t * job)
+{
+  struct stat *stat2;
+
+  stat2 = (struct stat *) job->opaque;
+
+  //Change mode
+  chmod (job->realpath, stat2->st_mode);
+  chown (job->realpath, stat2->st_uid, stat2->st_gid);
+  //TODO check for errors
+  return EXECUTER_END;
+}
+
+executer_result
+_executer_receive_stat (executer_job_t * job)
+{
+  int leido;
+  struct stat stat2;
+
+  leido = _executer_read_buffer (job->peer_sock, &stat2, sizeof (stat2));
+  if (leido != sizeof (stat2))
     {
-      //Copiamos a conflict
-      if (_executer_copy_conflict (file))
-	{
-	  error (EXIT_FAILURE, 0, "No se ha podido copiar un conflict.");
-	}
+      perror ("Errorororor");
+      return EXECUTER_ERROR;
     }
 
-  // Muy bien, enviamos un OK para que empiece el rsync
+  job->opaque = &stat2;
+  job->next_operation = _executer_change_permission;
+
+  return EXECUTER_RUNNING;
+
+}
+
+executer_result
+_executer_move_temp (executer_job_t * job)
+{
+  char *tempfile = (char *) job->opaque;
+  if (job->exists_real)
+    {
+      int ret = unlink (job->realpath);
+      if (ret != 0)
+	{
+	  // TODO
+	  perror ("unlink");
+	  return EXECUTER_ERROR;
+	}
+    }
+  int ret = rename (tempfile, job->realpath);
+  if (ret != 0)
+    {
+      perror ("renamoe");
+      return EXECUTER_ERROR;
+    }
+
+  //Change permis and owner
+  job->next_operation = _executer_receive_stat;
+  return EXECUTER_RUNNING;
+}
+
+executer_result
+_executer_recive_delta (executer_job_t * job)
+{
+  char *temppath;
+  rs_buffers_t rsbuf;
+  executer_rs inrs;
+  executer_rs outrs;
+  int result;
+
+  int tempfile = _executer_create_temp (job->realpath, &temppath);
+  if (tempfile == 0)
+    error (EXIT_FAILURE, errno, "Error creando el fichero temporal");
+
+  FILE *origfile = fopen (job->realpath, "rb");
+  if (origfile == NULL)
+    {
+      error (0, errno, "Error abriendo el fichero %s", job->realpath);
+      return EXECUTER_ERROR;
+    }
+
+  rs_job_t *patchjob = rs_patch_begin (rs_file_copy_cb, origfile);
+
+  inrs.sock = job->peer_sock;
+  inrs.type = _EXECUTER_SOCKET;
+  inrs.size = _EXECUTER_DEFAULT_OUT;
+  inrs.buf = malloc (inrs.size);
+
+  outrs.sock = tempfile;
+  outrs.type = _EXECUTER_FILE;
+  outrs.size = RS_DEFAULT_BLOCK_LEN;
+  outrs.buf = malloc (outrs.size);
+
+  rsbuf.avail_in = 0;
+  rsbuf.avail_out = 0;
+  rsbuf.next_in = 0;
+  rsbuf.next_out = 0;
+  rsbuf.eof_in = false;
+
+  result =
+    rs_job_drive (patchjob, &rsbuf, _executer_in_callback, &inrs,
+		  _executer_out_callback, &outrs);
+  if (result != RS_DONE)
+    {
+      error (0, 0, "Error parcheando el fichero");
+      return EXECUTER_ERROR;
+    }
+
+  //Check if there are any data
+  if (rsbuf.avail_out > 0)
+    {
+      _executer_in_callback (patchjob, &rsbuf, &inrs);
+      _executer_out_callback (patchjob, &rsbuf, &outrs);
+    }
+
+  rs_job_free (patchjob);
+
+  close (tempfile);
+  fclose (origfile);
+  free (outrs.buf);
+  free (inrs.buf);
+
+  job->next_operation = _executer_move_temp;
+  job->opaque = temppath;
+
+  return EXECUTER_RUNNING;
+}
+
+executer_result
+_executer_send_signature (executer_job_t * job)
+{
+
+  rs_job_t *sigjob;
+  executer_rs inrs;
+  executer_rs outrs;
+  rs_buffers_t rsbuf;
+
+  int openfile = open (job->realpath, O_RDONLY);
+
+  inrs.sock = openfile;
+  inrs.type = _EXECUTER_FILE;
+  inrs.size = RS_DEFAULT_BLOCK_LEN;
+  inrs.buf = malloc (inrs.size);
+
+  outrs.sock = job->peer_sock;
+  outrs.type = _EXECUTER_SOCKET;
+  outrs.size = _EXECUTER_DEFAULT_OUT;
+  outrs.buf = malloc (outrs.size);
+
+  sigjob = rs_sig_begin (RS_DEFAULT_BLOCK_LEN, RS_DEFAULT_STRONG_LEN);
+  rs_result result =
+    rs_job_drive (sigjob, &rsbuf, _executer_in_callback, &inrs,
+		  _executer_out_callback, &outrs);
+
+  // Free the memory
+  rs_job_free (sigjob);
+  free (inrs.buf);
+  free (outrs.buf);
+  close (openfile);
+
+  if (result != RS_DONE)
+    {
+      error (0, 0, "Error en rsync");
+      return EXECUTER_ERROR;
+    }
+
+  _executer_send_finish (job->peer_sock);
+
+  job->next_operation = _executer_recive_delta;
+  return EXECUTER_RUNNING;
+
+}
+
+executer_result
+_executer_copy_conflict (executer_job_t * job)
+{
+  char *source;
+  char *target;
+  char *command;
+  int ret;
+
+  // TODO optimizar el copiar, porque se puede realizar un enlace duro y luego al parchear deslinkar y mover
+
+  char copy_command[] = "cp -a %s %s";
+
+// Cojemos los path
+  _executer_real_path (job->file, &source);
+  _executer_conflict_path (job->file, &target);
+
+  command =
+    malloc (strlen (copy_command) + strlen (source) + strlen (target) - 4 +
+	    1);
+  sprintf (command, copy_command, source, target);
+
+  ret = system (command);
+
+  free (source);
+  free (target);
+
+  if (ret != EXIT_SUCCESS)
+    {
+      //TODO
+      printf ("Error");
+      return EXECUTER_ERROR;
+    }
+
+  // The next operation is send signature
+  job->next_operation = _executer_send_signature;
+  return EXECUTER_RUNNING;
+
+}
+
+executer_result
+_executer_receive_file (executer_job_t * job)
+{
+  FILE *file;
+  int operation;
+
+  // Receive a whole file
+  file = fopen (job->realpath, "w");
+  if (file == 0)
+    error (EXIT_FAILURE, errno, "Error creando fichero");
+  do
+    {
+      //Read the operation
+
+      size_t leido;
+      size_t size;
+      char *buf;
+
+      leido =
+	_executer_read_buffer (job->peer_sock, &operation,
+			       sizeof (operation));
+      if (leido != sizeof (operation))
+	error (EXIT_FAILURE, 0, "Error de protocolo");
+
+      if (operation == _EXECUTER_PART)
+	{
+	  leido =
+	    _executer_read_buffer (job->peer_sock, &size, sizeof (size));
+	  if (leido != sizeof (size))
+	    error (EXIT_FAILURE, 0, "Error de protocolo");
+
+	  buf = malloc (size);
+	  leido = _executer_read_buffer (job->peer_sock, buf, size);
+	  if (leido != size)
+	    error (EXIT_FAILURE, 0, "Error de protocolo");
+
+	  if (fwrite (buf, 1, size, file) != size)
+	    error (EXIT_FAILURE, 0, "Error escribiendo fichero");
+
+	}
+
+    }
+  while (operation == _EXECUTER_PART);
+
+  fclose (file);
+
+  job->next_operation = _executer_receive_stat;
+  return EXECUTER_RUNNING;
+
+}
+
+executer_result
+_executer_check_exists (executer_job_t * job)
+{
+  bool exists = false;
+  bool *conflict;
+  struct stat bufstat;
+
+  conflict = (bool *) job->opaque;
+
+  exists = !lstat (job->realpath, &bufstat);
   if (exists)
     {
-      rs_job_t *sigjob;
-      rs_buffers_t rsbuf;
 
-      printf
-	("executer: _executer_send_ok: El fichero existe, enviando signature\n",
-	 file);
-
-      //Creamos la firma y la enviamos
+      job->exists_real = true;
+      // Send ok, the next steps are copy confict, send signature
       int operacion = _EXECUTER_OK_EXISTS;
-      if (!_executer_send_buffer (sock, &operacion, sizeof (int)))
-	error (EXIT_FAILURE, 0, "Error mandando OK");
+      if (!_executer_send_buffer (job->peer_sock, &operacion, sizeof (int)))
+	{
+	  printf ("Error");
+	  return EXECUTER_ERROR;
+	}
 
-      int file = open (realpath, O_RDONLY);
-
-      executer_rs inrs, outrs;
-      inrs.sock = file;
-      inrs.type = _EXECUTER_FILE;
-
-      outrs.sock = sock;
-      outrs.type = _EXECUTER_SOCKET;
-
-      sigjob = rs_sig_begin (RS_DEFAULT_BLOCK_LEN, RS_DEFAULT_STRONG_LEN);
-      rs_result result = rs_job_drive (sigjob, &rsbuf, _executer_in_callback,
-				       &inrs, _executer_out_callback, &outrs);
-      rs_job_free (sigjob);
-      if (result != RS_DONE)
-	error (EXIT_FAILURE, 0, "Error en rsync");
-
-      close (file);
-      _executer_send_finish (sock);
-
-      //Recibimos el delta y parcheamos
-      //TODO
-
+      if (*conflict)
+	{
+	  job->next_operation = _executer_copy_conflict;
+	}
+      else
+	{
+	  job->next_operation = _executer_send_signature;
+	}
+      return EXECUTER_RUNNING;
     }
   else
     {
+      job->exists_real = false;
+      //Not exists, need all file
       int operacion = _EXECUTER_OK_NOT_EXISTS;
-      if (!_executer_send_buffer (sock, &operacion, sizeof (int)))
-	error (EXIT_FAILURE, 0, "Error mandando OK_NOT_EXISTS");
+      if (!_executer_send_buffer (job->peer_sock, &operacion, sizeof (int)))
+	{
+	  printf ("Error");
+	  return EXECUTER_ERROR;
+	}
+
+      job->next_operation = _executer_receive_file;
+      return EXECUTER_RUNNING;
     }
 
-  free (realpath);
-
-  return EXIT_SUCCESS;
 }
 
 int
@@ -435,25 +739,318 @@ _executer_send_revert (int sock, mensaje * mens, const char *file)
   return EXIT_SUCCESS;
 }
 
+executer_result
+_executer_send_stat (executer_job_t * job)
+{
+  struct stat stat2;
+  int ret;
+
+  ret = lstat (job->realpath, &stat2);
+  if (ret != 0)
+    {
+      perror ("lstat");
+      return EXECUTER_ERROR;
+    }
+  if (!_executer_send_buffer (job->peer_sock, &stat2, sizeof (stat2)))
+    {
+      perror ("Erroorrrrç");
+      return EXECUTER_ERROR;
+    }
+
+  return EXECUTER_END;
+
+}
+
+executer_result
+_executer_send_delta (executer_job_t * job)
+{
+  // The opaque pointer is to signature
+  rs_signature_t *signature = (rs_signature_t *) job->opaque;
+  rs_job_t *deltajob;
+  char *realpath;
+  executer_rs inrs;
+  executer_rs outrs;
+  rs_result result;
+  rs_buffers_t rsbuf;
+
+  deltajob = rs_delta_begin (signature);
+
+  _executer_real_path (job->file, &realpath);
+  int file2 = open (realpath, O_RDONLY);
+
+  inrs.type = _EXECUTER_FILE;
+  inrs.sock = file2;
+  inrs.size = RS_DEFAULT_BLOCK_LEN;
+  inrs.buf = malloc (inrs.size);
+  outrs.type = _EXECUTER_SOCKET;
+  outrs.sock = job->peer_sock;
+  outrs.size = _EXECUTER_DEFAULT_OUT;
+  outrs.buf = malloc (outrs.size);
+  if (rs_build_hash_table (signature) != RS_DONE)
+    {
+      printf ("Error");		//TODO
+      return EXECUTER_ERROR;
+    }
+  result =
+    rs_job_drive (deltajob, &rsbuf, _executer_in_callback, &inrs,
+		  _executer_out_callback, &outrs);
+
+  // Free the memory
+  free (realpath);
+  rs_job_free (deltajob);
+  free (inrs.buf);
+  free (outrs.buf);
+
+  // Send finish to the socket
+  _executer_send_finish (job->peer_sock);
+  if (result != RS_DONE)
+    {
+      printf ("Error");
+      return EXECUTER_ERROR;
+    }
+  else
+    {
+      // Ok, send the stat
+      job->next_operation = _executer_send_stat;
+      // Ok, the delta is send, no need more process
+      return EXECUTER_RUNNING;
+    }
+
+}
+
+executer_result
+_executer_recive_signature (executer_job_t * job)
+{
+  rs_signature_t *signature;
+  rs_job_t *signature_job;
+  executer_rs inrs;
+  rs_result result;
+  rs_buffers_t rsbuf;
+
+  //Load the signature
+  signature_job = rs_loadsig_begin (&signature);
+  inrs.type = _EXECUTER_SOCKET;
+  inrs.sock = job->peer_sock;
+  inrs.size = RS_DEFAULT_BLOCK_LEN;
+  inrs.buf = malloc (inrs.size);
+
+  // Run librsync job
+  result =
+    rs_job_drive (signature_job, &rsbuf, _executer_in_callback, &inrs, NULL,
+		  NULL);
+
+  // Free the memory
+  rs_job_free (signature_job);
+  free (inrs.buf);
+
+  if (result != RS_DONE)
+    {
+      printf ("Error");		// TODO
+      return EXECUTER_ERROR;
+    }
+  else
+    {
+      //After receive signature, we need send delta
+      job->next_operation = _executer_send_delta;
+      job->opaque = signature;
+      return EXECUTER_RUNNING;
+    }
+
+}
+
+executer_result
+_executer_send_file (executer_job_t * job)
+{
+  size_t leido;
+  FILE *file;
+  char buf[_EXECUTER_DEFAULT_OUT];
+
+  file = fopen (job->realpath, "r");
+  if (file == 0)
+    {
+      // TODO
+      perror ("fopen");
+      return EXECUTER_ERROR;
+    }
+
+  do
+    {
+      leido = fread (&buf, 1, _EXECUTER_DEFAULT_OUT, file);
+      if (leido == 0)
+	{
+	  if (ferror (file))
+	    {
+	      perror ("fread");
+	      fclose (file);
+	      return EXECUTER_ERROR;
+	    }
+	}
+      _executer_send_part (job->peer_sock, &buf, leido);
+    }
+  while (!feof (file));
+
+  fclose (file);
+
+  _executer_send_finish (job->peer_sock);
+
+  job->next_operation = _executer_send_stat;
+  return EXECUTER_RUNNING;
+
+}
+
+executer_result
+_executer_mkdir (executer_job_t * job)
+{
+
+  if (mkdir (job->realpath, job->mode) != 0)
+    {
+      error (EXIT_FAILURE, errno, "Error creando directorio");
+    }
+  return EXECUTER_END;
+}
+
+/*
+ * Read permissions bits,
+ * opaque contains the next job
+ */
+executer_result
+_executer_read_permission (executer_job_t * job)
+{
+  mode_t mode;
+
+  if (_executer_read_buffer (job->peer_sock, &mode, sizeof (mode)) !=
+      sizeof (mode))
+    error (EXIT_FAILURE, 0, "Error de protocolo");
+
+  job->mode = mode;
+
+  if (job->operation == EXECUTER_CREATE_DIR)
+    job->next_operation = _executer_mkdir;
+
+  return EXECUTER_RUNNING;
+}
+
+executer_result
+_executer_send_permission (executer_job_t * job)
+{
+  mode_t mode;
+  struct stat stat2;
+  if (lstat (job->realpath, &stat2) != 0)
+    {
+      error (EXIT_FAILURE, errno, "Error leyendo el directorio");
+    }
+
+  if (!_executer_send_buffer
+      (job->peer_sock, &(stat2.st_mode), sizeof (stat2.st_mode)))
+    error (EXIT_FAILURE, 0, "Error de protocolo");
+
+  return EXECUTER_END;
+}
+
+executer_result
+_executer_wait_modify (executer_job_t * job)
+{
+  //Wait for read operation from the peer
+  int operation;
+  size_t leido =
+    _executer_read_buffer (job->peer_sock, &operation, sizeof (operation));
+  if (leido != sizeof (operation))
+    error (EXIT_FAILURE, 0, "Error leyendo la operacion");
+  switch (operation)
+    {
+    case _EXECUTER_OK_EXISTS:
+      //In the other peer exists, send with librsync, next_operation is receive signature
+      job->next_operation = _executer_recive_signature;
+      return EXECUTER_RUNNING;
+      break;
+    case _EXECUTER_OK_NOT_EXISTS:
+      job->next_operation = _executer_send_file;
+      return EXECUTER_RUNNING;
+      break;
+    }
+  return true;
+}
+
 int
+_executer_run_job (executer_job_t * job)
+{
+  int result;
+  do
+    {
+      result = (job->next_operation) (job);
+      if (result == EXECUTER_ERROR)
+	{
+	  error (0, 0, "Error running executer job");
+	  return EXIT_FAILURE;
+	}
+    }
+  while (result == EXECUTER_RUNNING);
+  return EXIT_SUCCESS;
+}
+
+executer_result
+executer_send (int sock, mensaje * mens, const char *file)
+{
+  int ret;
+  executer_job_t job;
+
+  job.file = malloc (mens->file_size);
+  strcpy (job.file, file);
+  job.peer_sock = sock;
+  job.time = mens->time;
+  _executer_real_path (file, &(job.realpath));
+
+  switch (mens->operacion)
+    {
+    case OPENDFS_DELETE:
+      // TODO Esperar respuesta OK
+      break;
+    case OPENDFS_MODIFY:
+      // Ok, the next step is wait for modification in the other peer
+      job.operation = EXECUTER_MODIFY;
+      job.next_operation = _executer_wait_modify;
+      ret = _executer_run_job (&job);
+      break;
+    case OPENDFS_CREATE_DIR:
+      job.operation = EXECUTER_CREATE_DIR;
+      job.next_operation = _executer_send_permission;
+      ret = _executer_run_job (&job);
+    }
+
+  free (job.file);
+  free (job.realpath);
+  return ret;
+}
+
+executer_result
 executer_receive (int sock, mensaje * mens, const char *file)
 {
+
+  int ret;
+  executer_job_t job;
+  bool conflict;
+
+  job.file = malloc (mens->file_size);
+  strcpy (job.file, file);
+  job.peer_sock = sock;
+  job.time = mens->time;
+  _executer_real_path (file, &(job.realpath));
+
 // Bien, me han enviado un fichero, debo comprobar en que estado está aquí.
 
   /* Puede haber varias posibilidades:
    *
-   *      Borrado -> No tocado (Copiar y Borrar) *
-   *      Borrado -> Borrado (Nada que hacer) *
-   *      Borrado -> Modificado(Antes) (Copiar y Borrar) *
-   *      Borrado -> Modificado(Despues) (Enviar al otro) *
-   *      Modificado -> No tocado (Modificar) *
-   *      Modificado -> Borrado(Antes) (Modificar)
-   *      Modificado -> Borrado(Despues) (Nada que hacer, cuando toque se borrará)
-   *      Modificado -> Modificado(Antes) (Copiar y Modificar)
-   *      Modificado -> Modificado(Despues) (Enviar al otro (copiar y modificar)
+   *    Borrado -> No tocado (Copiar y Borrar) *
+   *    Borrado -> Borrado (Nada que hacer) *
+   *    Borrado -> Modificado(Antes) (Copiar y Borrar) *
+   *    Borrado -> Modificado(Despues) (Enviar al otro) *
+   *    Modificado -> No tocado (Modificar) *
+   *    Modificado -> Borrado(Antes) (Modificar)
+   *    Modificado -> Borrado(Despues) (Nada que hacer, cuando toque se borrará)
+   *    Modificado -> Modificado(Antes) (Copiar y Modificar)
+   *    Modificado -> Modificado(Despues) (Enviar al otro (copiar y modificar)
    */
 
-  int ret;
   queue_operation operation;
 
   ret = queue_get_operation_for_file (file, &operation);
@@ -476,12 +1073,14 @@ executer_receive (int sock, mensaje * mens, const char *file)
 	      if (time2 > time1)
 		{
 		  //Borrado -> Modificado(Despues) (Enviar al otro)
-		  return _executer_send_revert (sock, mens, file);
+		  job.next_operation = _executer_send_revert;
+		  ret = _executer_run_job (&job);
 		}
 	      else
 		{
 		  //Borrado -> Modificado(Antes) (Copiar y Borrar)
-		  return _executer_delete (sock, mens, file);
+		  job.next_operation = _executer_delete;
+		  ret = _executer_run_job (&job);
 		}
 	      break;
 	    }
@@ -493,27 +1092,39 @@ executer_receive (int sock, mensaje * mens, const char *file)
 	      if (time2 > time1)
 		{
 		  // Modificado -> Borrado(Despues)
-		  return EXIT_SUCCESS;
+		  job.next_operation = _executer_send_revert;
+		  ret = _executer_run_job (&job);
 		}
 	      else
 		{
 		  //Modificado -> Borrado(Antes) (Modificar)
-		  return _executer_send_ok (sock, mens, file, false);
+		  job.next_operation = _executer_check_exists;
+		  conflict = true;
+		  job.opaque = &conflict;
+		  ret = _executer_run_job (&job);
 		}
 	      break;
 	    case OPENDFS_MODIFY:
 	      if (time2 > time1)
 		{
 		  //Modificado -> Modificado(Despues)
-		  return _executer_send_revert (sock, mens, file);
+		  job.next_operation = _executer_send_revert;
+		  ret = _executer_run_job (&job);
 		}
 	      else
 		{
 		  //Modificado -> Modificado(Antes) (Copiar y Modificar)
-		  return _executer_send_ok (sock, mens, file, true);
+		  job.next_operation = _executer_check_exists;
+		  conflict = true;
+		  job.opaque = &conflict;
+		  ret = _executer_run_job (&job);
 		}
 	      break;
 	    }
+	  break;
+	case OPENDFS_CREATE_DIR:
+	  error (EXIT_FAILURE, 0,
+		 "Arreglar esto: se ha creado un directorio que hay en otro");
 	  break;
 	}
     }
@@ -523,96 +1134,25 @@ executer_receive (int sock, mensaje * mens, const char *file)
 	{
 	case OPENDFS_DELETE:
 	  //Borrado -> No tocado (Copiar y Borrar)
-	  return _executer_delete (sock, mens, file);
+	  job.next_operation = _executer_delete;
+	  ret = _executer_run_job (&job);
 	  break;
 	case OPENDFS_MODIFY:
-	  //Modificado -> No tocado (Modificar)
-	  return _executer_send_ok (sock, mens, file, false);
+	  //Modificado -> No tocado (Modificar sin copiar)
+	  job.next_operation = _executer_check_exists;
+	  conflict = false;
+	  job.opaque = &conflict;
+	  ret = _executer_run_job (&job);
 	  break;
+	case OPENDFS_CREATE_DIR:
+	  job.next_operation = _executer_read_permission;
+	  job.operation = EXECUTER_CREATE_DIR;
+	  ret = _executer_run_job (&job);
 	}
     }
 
-  return EXIT_FAILURE;
-}
+  free (job.file);
+  free (job.realpath);
 
-bool
-_executer_send_exists (int sock, const char *file)
-{
-
-  int continua;
-  rs_signature_t *signature;
-  rs_job_t *job;
-  rs_buffers_t rsbuf;
-  rs_result result;
-  executer_rs inrs;
-  executer_rs outrs;
-  char *realpath;
-
-  //Cargamos la signature
-  job = rs_loadsig_begin (&signature);
-  inrs.type = _EXECUTER_SOCKET;
-  inrs.sock = sock;
-  result = rs_job_drive (job, &rsbuf, _executer_in_callback, &inrs, NULL,
-			 NULL);
-  rs_job_free (job);
-  if (result != RS_DONE)
-    error (EXIT_FAILURE, 0, "Error en el rsync");
-
-  //Ok ya tenemos la signature, enviamos el delta
-  job = rs_delta_begin (&signature);
-
-  _executer_real_path (file, &realpath);
-  int file2 = open (realpath, O_RDONLY);
-
-  inrs.type = _EXECUTER_FILE;
-  inrs.sock = file2;
-  outrs.type = _EXECUTER_SOCKET;
-  outrs.sock = sock;
-  result = rs_job_drive (job, &rsbuf, _executer_in_callback, &inrs,
-			 _executer_out_callback, &outrs);
-  rs_job_free (job);
-  if (result != RS_DONE)
-    error (EXIT_FAILURE, 0, "Error en el rsync");
-
-  //Muy bien, ya hemos enviado el delta, se supone que el otro extremo a parchado el fichero
-
-  free (realpath);
-
-  return true;
-
-}
-
-bool
-_executer_wait_modify (int sock, const char *file)
-{
-  //Esperamos o que exista o que no exista
-  int operacion;
-  size_t leido = read (sock, &operacion, sizeof (operacion));
-  if (leido != sizeof (operacion))
-    error (EXIT_FAILURE, 0, "Error leyendo la operacion");
-  switch (operacion)
-    {
-    case _EXECUTER_OK_EXISTS:
-      //Existe, llamamos a send_exists
-      return _executer_send_exists (sock, file);
-      break;
-    case _EXECUTER_OK_NOT_EXISTS:
-      break;
-    }
-  return true;
-}
-
-int
-executer_send (int sock, mensaje * mens, const char *file)
-{
-
-  switch (mens->operacion)
-    {
-    case OPENDFS_DELETE:
-      // TODO Esperar respuesta OK
-      break;
-    case OPENDFS_MODIFY:
-      if (!_executer_wait_modify (sock, file))
-	error (EXIT_FAILURE, 0, "Error esperando respuesta");
-    }
+  return ret;
 }
