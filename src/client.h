@@ -19,42 +19,11 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef OPENDFS_H_
-#define OPENDFS_H_
+#ifndef CLIENT_H_
+#define CLIENT_H_
 
-#include <config.h>
-#include <time.h>
+void client_init (pthread_t * pthread);
 
-#define MY_NAME "opendfs"
+void client_stop ();
 
-typedef struct _configuration
-{
-
-  int port;
-  char *peer_name;
-  char *path;
-  int peer_port;
-  char *database;
-  char *conflicts;
-  int debug_level;
-
-} configuration;
-
-configuration config;
-
-typedef struct _mensaje
-{
-  int operacion;
-  int file_size;
-  struct tm time;
-} mensaje;
-
-enum
-{
-  OPENDFS_DELETE = 0, OPENDFS_MODIFY = 1
-};
-
-#define MAGIC_SERVER "OPENDFS_V0.1_MAGIC_SERVIDOR"
-#define MAGIC_LEN 28
-
-#endif
+#endif /* CLIENT_H_ */

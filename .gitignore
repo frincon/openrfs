@@ -4,3 +4,12 @@
 .settings
 autom4te.cache
 *~
+
+*.o
+
+Makefile
+config.log
+config.status
+src/.deps/
+src/stamp-h1
+src/opendfs
