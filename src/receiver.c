@@ -38,6 +38,7 @@
 #include "queue.h"
 #include "executer.h"
 #include "receiver.h"
+#include "utils.c"
 
 pthread_t _thread_receiver = NULL;
 
@@ -57,7 +58,6 @@ _receiver_run (void *ptr)
 
   int sock = (*(int *) ptr);
 
-  printf ("receiver: _receiver_run: sock: %i\n", sock);
   fflush (stdout);
   //Esta es la tarea de envio
   while (!_is_receiver_stopped)
@@ -68,8 +68,6 @@ _receiver_run (void *ptr)
       read_fd_set = active_fd_set;
 
       int ret = select (FD_SETSIZE, &read_fd_set, NULL, NULL, NULL);
-      printf ("receiver: _receiver_run: salido de select: ret: %i sock: %i\n",
-	      ret, sock);
       fflush (stdout);
       if (ret < 0)
 	{
@@ -86,26 +84,29 @@ _receiver_run (void *ptr)
 	  if (leido == 0)
 	    {
 	      //El socket se ha cerrado
+	      utils_debug ("The socket has been closed");
 	      receiver_stop ();
 	      break;
 	    }
 	  if (leido != sizeof (mens))
-	    error (EXIT_FAILURE, 0,
-		   "Error leyendo datos del socket1, espedaro: %i, leido: %i",
-		   sizeof (mens), leido);
+	    {
+	      utils_error ("Error reading file message from peer: %s",
+			   strerror (errno));
+	      receiver_stop ();
+	      break;
+	    }
 	  file = malloc (mens.file_size);
 	  leido = read (sock, file, mens.file_size);
 	  if (leido != mens.file_size)
 	    {
-	      perror (NULL);
-	      error (EXIT_FAILURE, 0,
-		     "Error leyendo datos del socket2, esperado: %i, leido: %i",
-		     mens.file_size, leido);
+	      utils_error ("Error reading file name from peer: %s",
+			   strerror (errno));
+	      receiver_stop ();
+	      break;
 	    }
 
-	  printf
-	    ("receiver: _receiver_run: Leido del socket, operacion: %i, file: %s\n",
-	     mens.operacion, file);
+	  utils_trace ("reading from socket, operation: %i, file: %s",
+		       mens.operacion, file);
 	  ret = executer_receive (sock, &mens, file);
 	  free (file);
 	  fflush (stdout);

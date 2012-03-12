@@ -35,6 +35,7 @@
 #include "opendfs.h"
 #include "receiver.h"
 #include "server.h"
+#include "utils.h"
 
 bool _server_is_stopped = false;
 
@@ -50,7 +51,7 @@ _server_make_socket (uint16_t port)
   sock = socket (PF_INET, SOCK_STREAM, 0);
   if (sock < 0)
     {
-      perror ("socket");
+      utils_fatal ("Error creating socket: %s", strerror (errno));
       exit (EXIT_FAILURE);
     }
 
@@ -60,7 +61,7 @@ _server_make_socket (uint16_t port)
   name.sin_addr.s_addr = htonl (INADDR_ANY);
   if (bind (sock, (struct sockaddr *) &name, sizeof (name)) < 0)
     {
-      perror ("bind");
+      utils_fatal ("Error binding socket: %s", strerror (errno));
       exit (EXIT_FAILURE);
     }
 

@@ -36,6 +36,7 @@
 
 #include "opendfs.h"
 #include "queue.h"
+#include "utils.c"
 #include "executer.h"
 
 enum
@@ -73,11 +74,17 @@ _executer_read_buffer (int sock, void *buf, size_t size)
 	   size);
   do
     {
-      size_t leido2 = read (sock, buf, size);
+      size_t leido2;
+      leido2 = read (sock, buf, size);
       fprintf (stderr, "_executer_read_buffer: leido %i bytes...\n", leido2);
       if (leido2 == 0)
 	{
 	  return leido;
+	}
+      else if (leido2 < 0)
+	{
+	  utils_error ("Error reading from socket: %s", strerror (errno));
+	  return leido2;
 	}
       leido += leido2;
     }
@@ -143,7 +150,7 @@ _executer_real_path (const char *file, char **path)
   strcpy (path2, config.path);
   strcat (path2, file);
 
-  printf ("executer: _executer_real_path: file: %s path: %s\n", file, path2);
+  utils_trace ("file: '%s' real path: '%s'", file, path2);
 
   *path = path2;
 }
@@ -174,8 +181,7 @@ _executer_conflict_path (const char *file, char **path)
   strcat (path2, ".");
   strcat (path2, date_formatted);
 
-  printf ("executer: _executer_conflict_path: file: %s path: %s\n", file,
-	  path2);
+  utils_trace ("file: '%s' conflict path: '%s'");
 
   *path = path2;
 }
@@ -188,18 +194,19 @@ _executer_delete (executer_job_t * job)
   char *path;
   char *newpath;
 
-  printf ("executer: _executer_delete: %s\n", job->file);
+  int return_value = EXECUTER_END;
 
   _executer_real_path (job->file, &path);
 
-  printf ("executer: _executer_delete: path: %s\n", path);
+  utils_debug ("Deleting file: '%s' whith real path '%s'", job->file, path);
 
 //Miramos si existe el fichero:
   ret = lstat (path, &buf);
   if (ret != 0)
     {
-      warn ("No se ha encontrado un fichero a borrar");
-      return EXECUTER_END;
+      utils_warn ("Error making lstat in file '%s': %s", path,
+		  strerror (errno));
+      return_value = EXECUTER_ERROR;
     }
 
 //Existe, lo movemos, cambiandolo de nombre
@@ -208,12 +215,15 @@ _executer_delete (executer_job_t * job)
 
   if (rename (path, newpath) != 0)
     {
-      error (EXIT_FAILURE, errno, "Error moviendo el fichero");
+      utils_error
+	("Error deleting file '%s' (moving to conflicts directory): %s", path,
+	 strerror (errno));
+      return_value = EXECUTER_ERROR;
     }
   free (newpath);
   free (path);
 
-  return EXECUTER_END;
+  return return_value;
 }
 
 rs_result
@@ -255,11 +265,14 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
       leido =
 	_executer_read_buffer (executer->sock, &haymas, sizeof (haymas));
       if (leido != sizeof (haymas))
-	error (EXIT_FAILURE, 0, "Error de protocolo");
+	{
+	  utils_error ("Error reading from buffer");
+	  return RS_IO_ERROR;
+	}
 
       if (haymas == _EXECUTER_PART)
 	{
-	  fprintf (stderr, "_executer_in_callback: Hay mas...\n");
+	  utils_trace ("There are more");
 	  //Hay mas se lee
 	  size_t size;
 
@@ -267,18 +280,22 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	  leido =
 	    _executer_read_buffer (executer->sock, &size, sizeof (size));
 	  if (leido != sizeof (size))
-	    error (EXIT_FAILURE, 0, "Error de protocolo");
+	    {
+	      utils_error ("Error reading from buffer");
+	      return RS_IO_ERROR;
+	    }
 
 	  //Se lee el contenido
 	  char *buf3;
 	  buf3 = malloc (size);
 	  leido = _executer_read_buffer (executer->sock, buf3, size);
 	  if (leido != size)
-	    error (EXIT_FAILURE, 0, "Error de protocolo");
+	    {
+	      utils_error ("Error reading from buffer");
+	      return RS_IO_ERROR;
+	    }
 
-	  fprintf (stderr,
-		   "_executer_in_callback: Se han leido %i bytes...\n",
-		   leido);
+	  utils_debug ("Readed %i bytes", leido);
 
 	  while (size + buf->avail_in > executer->size)
 	    {
@@ -348,7 +365,8 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	}
       else
 	{
-	  error (EXIT_FAILURE, 0, "Error leyendo el fichero");
+	  utils_error ("Error reading from file, cancelling job");
+	  return RS_IO_ERROR;
 	}
     }
 }
@@ -375,14 +393,22 @@ _executer_out_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	  if (!_executer_send_buffer
 	      (executer->sock, executer->buf,
 	       executer->size - buf->avail_out))
-	    error (EXIT_FAILURE, 0, "Error escribiendo fichero");
+	    {
+	      utils_error ("Error writing %i bytes, cancelling job",
+			   executer->size - buf->avail_out);
+	      return RS_IO_ERROR;
+	    }
 	}
       else
 	{
 	  if (!_executer_send_part
 	      (executer->sock, executer->buf,
 	       executer->size - buf->avail_out))
-	    error (EXIT_FAILURE, 0, "Error escribiendo socket");
+	    {
+	      utils_error ("Error writing %i bytes, cancelling job",
+			   executer->size - buf->avail_out);
+	      return RS_IO_ERROR;
+	    }
 	}
       buf->avail_out = executer->size;
       buf->next_out = executer->buf;
@@ -444,7 +470,7 @@ _executer_receive_stat (executer_job_t * job)
   leido = _executer_read_buffer (job->peer_sock, &stat2, sizeof (stat2));
   if (leido != sizeof (stat2))
     {
-      perror ("Errorororor");
+      utils_error ("Error reading stat data from peer: %s", strerror (errno));
       return EXECUTER_ERROR;
     }
 
@@ -464,15 +490,16 @@ _executer_move_temp (executer_job_t * job)
       int ret = unlink (job->realpath);
       if (ret != 0)
 	{
-	  // TODO
-	  perror ("unlink");
+	  utils_error ("Error unlinking file '%s': %s", job->realpath,
+		       strerror (errno));
 	  return EXECUTER_ERROR;
 	}
     }
   int ret = rename (tempfile, job->realpath);
   if (ret != 0)
     {
-      perror ("renamoe");
+      utils_error ("Error renaming temporal file '%s' to '%s': %s", tempfile,
+		   job->realpath, strerror (errno));
       return EXECUTER_ERROR;
     }
 
@@ -492,12 +519,17 @@ _executer_recive_delta (executer_job_t * job)
 
   int tempfile = _executer_create_temp (job->realpath, &temppath);
   if (tempfile == 0)
-    error (EXIT_FAILURE, errno, "Error creando el fichero temporal");
+    {
+      utils_error ("Error creating temp file for file '%s': %s",
+		   job->realpath, strerror (errno));
+      return EXECUTER_ERROR;
+    }
 
   FILE *origfile = fopen (job->realpath, "rb");
   if (origfile == NULL)
     {
-      error (0, errno, "Error abriendo el fichero %s", job->realpath);
+      utils_error ("Error opening file '%s': %s", job->realpath,
+		   strerror (errno));
       return EXECUTER_ERROR;
     }
 
@@ -524,7 +556,7 @@ _executer_recive_delta (executer_job_t * job)
 		  _executer_out_callback, &outrs);
   if (result != RS_DONE)
     {
-      error (0, 0, "Error parcheando el fichero");
+      utils_error ("Error patching file");
       return EXECUTER_ERROR;
     }
 
@@ -582,7 +614,7 @@ _executer_send_signature (executer_job_t * job)
 
   if (result != RS_DONE)
     {
-      error (0, 0, "Error en rsync");
+      utils_error ("Error sending signature");
       return EXECUTER_ERROR;
     }
 
@@ -621,8 +653,7 @@ _executer_copy_conflict (executer_job_t * job)
 
   if (ret != EXIT_SUCCESS)
     {
-      //TODO
-      printf ("Error");
+      utils_error ("Error copying file to conflicts");
       return EXECUTER_ERROR;
     }
 
@@ -637,11 +668,16 @@ _executer_receive_file (executer_job_t * job)
 {
   FILE *file;
   int operation;
+  bool protocol_error = false;
 
   // Receive a whole file
   file = fopen (job->realpath, "w");
   if (file == 0)
-    error (EXIT_FAILURE, errno, "Error creando fichero");
+    {
+      utils_error ("Error creating file '%s': %s", job->realpath,
+		   strerror (errno));
+      return EXECUTER_ERROR;
+    }
   do
     {
       //Read the operation
@@ -650,26 +686,44 @@ _executer_receive_file (executer_job_t * job)
       size_t size;
       char *buf;
 
+
       leido =
 	_executer_read_buffer (job->peer_sock, &operation,
 			       sizeof (operation));
       if (leido != sizeof (operation))
-	error (EXIT_FAILURE, 0, "Error de protocolo");
+	{
+	  protocol_error = true;
+	  break;
+	}
 
       if (operation == _EXECUTER_PART)
 	{
+	  int ret;
 	  leido =
 	    _executer_read_buffer (job->peer_sock, &size, sizeof (size));
+
 	  if (leido != sizeof (size))
-	    error (EXIT_FAILURE, 0, "Error de protocolo");
+	    {
+	      protocol_error = true;
+	      break;
+	    }
 
 	  buf = malloc (size);
 	  leido = _executer_read_buffer (job->peer_sock, buf, size);
 	  if (leido != size)
-	    error (EXIT_FAILURE, 0, "Error de protocolo");
+	    {
+	      protocol_error = true;
+	      break;
+	    }
 
-	  if (fwrite (buf, 1, size, file) != size)
-	    error (EXIT_FAILURE, 0, "Error escribiendo fichero");
+	  ret = fwrite (buf, 1, size, file);
+
+	  if (ret != size)
+	    {
+	      utils_error ("Error writing file: %s", strerror (errno));
+	      protocol_error = true;
+	      break;
+	    }
 
 	}
 
@@ -677,6 +731,12 @@ _executer_receive_file (executer_job_t * job)
   while (operation == _EXECUTER_PART);
 
   fclose (file);
+
+  if (protocol_error)
+    {
+      utils_error ("Error receiving whole file, canceling job");
+      return EXECUTER_ERROR;
+    }
 
   job->next_operation = _executer_receive_stat;
   return EXECUTER_RUNNING;
@@ -701,7 +761,7 @@ _executer_check_exists (executer_job_t * job)
       int operacion = _EXECUTER_OK_EXISTS;
       if (!_executer_send_buffer (job->peer_sock, &operacion, sizeof (int)))
 	{
-	  printf ("Error");
+	  utils_error ("Error sending data to peer.");
 	  return EXECUTER_ERROR;
 	}
 
@@ -722,7 +782,7 @@ _executer_check_exists (executer_job_t * job)
       int operacion = _EXECUTER_OK_NOT_EXISTS;
       if (!_executer_send_buffer (job->peer_sock, &operacion, sizeof (int)))
 	{
-	  printf ("Error");
+	  utils_error ("Error sending data to peer.");
 	  return EXECUTER_ERROR;
 	}
 
@@ -735,7 +795,7 @@ _executer_check_exists (executer_job_t * job)
 int
 _executer_send_revert (int sock, mensaje * mens, const char *file)
 {
-  printf ("executer: _executer_send_revert: %s\n", file);
+  utils_debug ("The file %s has operations after, send revert operation.");
   return EXIT_SUCCESS;
 }
 
@@ -748,12 +808,13 @@ _executer_send_stat (executer_job_t * job)
   ret = lstat (job->realpath, &stat2);
   if (ret != 0)
     {
-      perror ("lstat");
+      utils_error ("Error stat file '%s': %s", job->realpath,
+		   strerror (errno));
       return EXECUTER_ERROR;
     }
   if (!_executer_send_buffer (job->peer_sock, &stat2, sizeof (stat2)))
     {
-      perror ("Erroorrrrç");
+      utils_error ("Error sending stat data to peer: %s", strerror (errno));
       return EXECUTER_ERROR;
     }
 
@@ -788,7 +849,7 @@ _executer_send_delta (executer_job_t * job)
   outrs.buf = malloc (outrs.size);
   if (rs_build_hash_table (signature) != RS_DONE)
     {
-      printf ("Error");		//TODO
+      utils_error ("Error building hash table");
       return EXECUTER_ERROR;
     }
   result =
@@ -802,10 +863,14 @@ _executer_send_delta (executer_job_t * job)
   free (outrs.buf);
 
   // Send finish to the socket
-  _executer_send_finish (job->peer_sock);
+  if (!_executer_send_finish (job->peer_sock))
+    {
+      utils_error ("Error sending finish message: %s", strerror (errno));
+      return EXECUTER_ERROR;
+    }
   if (result != RS_DONE)
     {
-      printf ("Error");
+      utils_error ("Error calculating delta");
       return EXECUTER_ERROR;
     }
   else
@@ -845,7 +910,7 @@ _executer_recive_signature (executer_job_t * job)
 
   if (result != RS_DONE)
     {
-      printf ("Error");		// TODO
+      utils_error ("Error carculating singnature");
       return EXECUTER_ERROR;
     }
   else
@@ -868,8 +933,8 @@ _executer_send_file (executer_job_t * job)
   file = fopen (job->realpath, "r");
   if (file == 0)
     {
-      // TODO
-      perror ("fopen");
+      utils_error ("Error opening file '%s' for read: %s", job->realpath,
+		   strerror (errno));
       return EXECUTER_ERROR;
     }
 
@@ -880,12 +945,17 @@ _executer_send_file (executer_job_t * job)
 	{
 	  if (ferror (file))
 	    {
-	      perror ("fread");
+	      utils_error ("Error reading file '%s': %s", job->realpath,
+			   strerror (errno));
 	      fclose (file);
 	      return EXECUTER_ERROR;
 	    }
 	}
-      _executer_send_part (job->peer_sock, &buf, leido);
+      if (!_executer_send_part (job->peer_sock, &buf, leido))
+	{
+	  utils_error ("Error sending file data to peer: %s",
+		       strerror (errno));
+	}
     }
   while (!feof (file));
 
@@ -904,7 +974,9 @@ _executer_mkdir (executer_job_t * job)
 
   if (mkdir (job->realpath, job->mode) != 0)
     {
-      error (EXIT_FAILURE, errno, "Error creando directorio");
+      utils_error ("Error creating directory '%s': %s", job->realpath,
+		   strerror (errno));
+      return EXECUTER_ERROR;
     }
   return EXECUTER_END;
 }
@@ -920,7 +992,10 @@ _executer_read_permission (executer_job_t * job)
 
   if (_executer_read_buffer (job->peer_sock, &mode, sizeof (mode)) !=
       sizeof (mode))
-    error (EXIT_FAILURE, 0, "Error de protocolo");
+    {
+      utils_error ("Error reading from peer");
+      return EXECUTER_ERROR;
+    }
 
   job->mode = mode;
 
@@ -937,12 +1012,17 @@ _executer_send_permission (executer_job_t * job)
   struct stat stat2;
   if (lstat (job->realpath, &stat2) != 0)
     {
-      error (EXIT_FAILURE, errno, "Error leyendo el directorio");
+      utils_error ("Error reading stat from file '%s': %s", job->realpath,
+		   strerror (errno));
+      return EXECUTER_ERROR;
     }
 
   if (!_executer_send_buffer
       (job->peer_sock, &(stat2.st_mode), sizeof (stat2.st_mode)))
-    error (EXIT_FAILURE, 0, "Error de protocolo");
+    {
+      utils_error ("Error sendig stat information, cancelling job");
+      return EXECUTER_ERROR;
+    }
 
   return EXECUTER_END;
 }
@@ -955,7 +1035,10 @@ _executer_wait_modify (executer_job_t * job)
   size_t leido =
     _executer_read_buffer (job->peer_sock, &operation, sizeof (operation));
   if (leido != sizeof (operation))
-    error (EXIT_FAILURE, 0, "Error leyendo la operacion");
+    {
+      utils_error ("Error reading operation, cancelling job");
+      return EXECUTER_ERROR;
+    }
   switch (operation)
     {
     case _EXECUTER_OK_EXISTS:
@@ -968,7 +1051,8 @@ _executer_wait_modify (executer_job_t * job)
       return EXECUTER_RUNNING;
       break;
     }
-  return true;
+  utils_error ("Operation not permited: %i", operation);
+  return EXECUTER_ERROR;
 }
 
 int
@@ -980,7 +1064,8 @@ _executer_run_job (executer_job_t * job)
       result = (job->next_operation) (job);
       if (result == EXECUTER_ERROR)
 	{
-	  error (0, 0, "Error running executer job");
+	  // TODO Improve error handling
+	  utils_error ("Error running job, job cancelled");
 	  return EXIT_FAILURE;
 	}
     }

@@ -54,7 +54,10 @@ _client_run (void *ptr)
       /* Create the socket. */
       sock = socket (PF_INET, SOCK_STREAM, 0);
       if (sock < 0)
-	error (EXIT_FAILURE, errno, "Error creating socket");
+	{
+	  utils_fatal ("Error creating socket: %s", strerror (errno));
+	  exit (EXIT_FAILURE);
+	}
 
       /* Connect to the server. */
       init_sockaddr (&servername, config.peer_name, config.peer_port);
@@ -62,10 +65,10 @@ _client_run (void *ptr)
 	  connect (sock, (struct sockaddr *) &servername,
 		   sizeof (servername)))
 	{
-	  error (0, errno,
-		 "%s:%s: Error connecting to %s:%i, sleep %i seconds",
-		 __FILE__, __FUNCTION__, config.peer_name, config.peer_port,
-		 _CLIENT_SLEEP_SECONDS);
+	  utils_error ("Error connecting to %s:%i: %s ", config.peer_name,
+		       config.peer_port, strerror (errno));
+	  utils_debug ("Sleeping client for %i seconds",
+		       _CLIENT_SLEEP_SECONDS);
 	  sleep (_CLIENT_SLEEP_SECONDS);
 	}
       else
@@ -79,7 +82,8 @@ _client_run (void *ptr)
 	  buffer[MAGIC_LEN - 1] = '\0';
 	  if (bytes_readed != MAGIC_LEN - 1)
 	    {
-	      error (0, 0, "Receive bad magic");
+	      utils_error
+		("Receive bad magic number from peer, closing socket");
 	      close (sock);
 	    }
 	  if (strcmp (MAGIC_SERVER, buffer) == 0)
@@ -87,14 +91,18 @@ _client_run (void *ptr)
 	      //The magic is OK, start send thread
 	      pthread_t thread;
 	      if (0 > sender_init (sock, &thread))
-		error (EXIT_FAILURE, errno, "Error starting sender");
+		{
+		  utils_error ("Error starting sender");
+		  close (sock);
+		}
 
 	      //Wait for thread to termitate
 	      pthread_join (thread, NULL);
 	    }
 	  else
 	    {
-	      error (0, 0, "Receive bad magic");
+	      utils_error
+		("Receive bad magic number from peer, closing socket");
 	      close (sock);
 	    }
 	}

@@ -59,7 +59,6 @@ _sender_run (void *ptr)
 {
 
   int sock = (*(int *) ptr);
-  printf ("sender: _sender_run: sock: %i\n", sock);
   fflush (stdout);
 
   //Esta es la tarea de envio
@@ -77,8 +76,7 @@ _sender_run (void *ptr)
 	  mens.file_size = strlen (operation.file) + 1;
 	  mens.time = operation.time;
 
-	  printf (MY_NAME ":%s:%s: Enviando mensaje %s\n", __FILE__,
-		  __FUNCTION__, operation.file);
+	  utils_trace ("Sending message %s", operation.file);
 
 	  writed = write (sock, &mens, sizeof (mens));
 	  if (writed != sizeof (mens))
