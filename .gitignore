@@ -6,6 +6,8 @@ autom4te.cache
 *~
 
 *.o
+*.gcda
+*.gcno
 
 Makefile
 config.log

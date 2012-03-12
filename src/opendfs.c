@@ -49,6 +49,7 @@
 #include "queue.h"
 #include "sender.h"
 #include "client.h"
+#include "utils.h"
 
 enum
 {
@@ -151,7 +152,7 @@ xmp_opendir (const char *path, struct fuse_file_info *fi)
   char *path2;
 
   convert_path (path, &path2);
-  printf ("opendfs: xmp_opendir: path: %s path2: %s\n", path, path2);
+  utils_trace ("path: %s, converted path: %s", path, path2);
 
   d->dp = opendir (path2);
   free (path2);
@@ -531,15 +532,15 @@ xmp_release (const char *path, struct fuse_file_info *fi)
       queue_operation op;
       op.file = path;
       op.operation = OPENDFS_MODIFY;
-      printf
-	("opendfs: xmp_release: %s closed write opened, sending queue, flags: %i\n",
-	 path, fi->flags);
+      utils_debug
+	("closed file '%s' opened for write, sending queue, flags: %i", path,
+	 fi->flags);
       queue_add_operation (&op);
     }
   else
     {
-      printf ("opendfs: xmp_release: %s closed reanonly opened, flags: %i\n",
-	      path, fi->flags);
+      utils_debug ("closed file '%s' opened read only, falgs: %i", path,
+		   fi->flags);
     }
 
   return 0;
@@ -656,13 +657,13 @@ static struct fuse_operations xmp_oper = {
 
 static struct fuse_opt myfs_opts[] =
   { MYFS_OPT ("port=%i", port, 0), MYFS_OPT ("peername=%s", peer_name, 0),
-  MYFS_OPT ("path=%s", path, 0),
+MYFS_OPT ("path=%s", path, 0),
   MYFS_OPT ("peerport=%i", peer_port, 0), MYFS_OPT ("database=%s", database,
 						    0),
-  MYFS_OPT ("conflicts=%s", conflicts, 0),
+    MYFS_OPT ("conflicts=%s", conflicts, 0),
 
   FUSE_OPT_KEY ("-V", KEY_VERSION), FUSE_OPT_KEY ("--version", KEY_VERSION),
-  FUSE_OPT_KEY ("-h", KEY_HELP),
+    FUSE_OPT_KEY ("-h", KEY_HELP),
   FUSE_OPT_KEY ("--help", KEY_HELP), FUSE_OPT_END
 };
 
@@ -731,8 +732,9 @@ create_conflicts ()
     {
       if (mkdir (path, 0700) != 0)
 	{
-	  perror (NULL);
-	  error (EXIT_FAILURE, 0, "Error creando conflicts");
+	  utils_fatal ("Error creating conflicts directory: %s",
+		       strerror (errno));
+	  exit (EXIT_FAILURE);
 	}
     }
 
