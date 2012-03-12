@@ -15,15 +15,8 @@ Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 Author: Fernando Rincón <frm.rincon@gmail.com>])
 
 
+AT_INIT
 AT_TESTED([opendfs])
 
-AT_INIT
-AT_SETUP([opendfs: Basic])
+m4_include([general.at])
 
-mkdir test1
-mkdir test1/1
-mkdir test1/2
-
-AT_CHECK([touch $(pwd)/test1/prueba])
-
-AT_CLEANUP

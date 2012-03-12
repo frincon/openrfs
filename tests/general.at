@@ -1,0 +1,69 @@
+# Copyright (C) 2012 Fernando Rincón. All rights reserved.
+# This copyrighted material is made available to anyone wishing to use, modify,
+# copy, or redistribute it subject to the terms and conditions of the GNU
+# General Public License v.2.
+# 
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+# 
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# 
+# Author: Fernando Rincón <frm.rincon@gmail.com>
+
+
+m4_define([M_OPENDFS_PREPARE],
+[
+mkdir testdir
+mkdir testdir/1
+mkdir testdir/2
+mkdir mountdir
+mkdir mountdir/1
+mkdir mountdir/2
+mkdir database
+])
+
+m4_define([M_OPENDFS_MOUNT],
+[
+opendfs mountdir/1 -o port=5001,peername=localhost,peerport=5000,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+opendfs mountdir/2 -o port=5000,peername=localhost,peerport=5001,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+sleep 11
+])
+
+m4_define([M_OPENDFS_FINISH],
+[
+pkill opendfs
+sleep 10
+])
+
+AT_SETUP([sinc: create file])
+AT_KEYWORDS([sinc])
+
+M_OPENDFS_PREPARE
+M_OPENDFS_MOUNT
+
+cp /etc/hosts mountdir/1
+sleep 4
+
+M_OPENDFS_FINISH
+
+AT_CHECK([diff testdir/1/hosts testdir/2/hosts],0)
+AT_CLEANUP
+
+
+AT_SETUP([sinc: create directory])
+AT_KEYWORDS([sinc])
+
+M_OPENDFS_PREPARE
+M_OPENDFS_MOUNT
+
+mkdir mountdir/1/prueba
+sleep 4
+
+M_OPENDFS_FINISH
+
+AT_CHECK([test -d testdir/2/prueba],0)
+AT_CLEANUP
