@@ -103,6 +103,7 @@ ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
+AUTOM4TE = @AUTOM4TE@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
@@ -535,6 +536,7 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) check-local
 check: check-recursive
 all-am: Makefile
 installdirs: installdirs-recursive
@@ -566,7 +568,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-local mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -611,7 +613,7 @@ install-ps: install-ps-recursive
 
 install-ps-am:
 
-installcheck-am:
+installcheck-am: installcheck-local
 
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -633,24 +635,54 @@ ps-am:
 
 uninstall-am:
 
-.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) ctags-recursive \
-	install-am install-strip tags-recursive
+.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) check-am \
+	ctags-recursive install-am install-strip tags-recursive
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
-	all all-am am--refresh check check-am clean clean-generic \
-	ctags ctags-recursive dist dist-all dist-bzip2 dist-gzip \
-	dist-lzma dist-shar dist-tarZ dist-xz dist-zip distcheck \
-	distclean distclean-generic distclean-tags distcleancheck \
-	distdir distuninstallcheck dvi dvi-am html html-am info \
-	info-am install install-am install-data install-data-am \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am
+	all all-am am--refresh check check-am check-local clean \
+	clean-generic clean-local ctags ctags-recursive dist dist-all \
+	dist-bzip2 dist-gzip dist-lzma dist-shar dist-tarZ dist-xz \
+	dist-zip distcheck distclean distclean-generic distclean-tags \
+	distcleancheck distdir distuninstallcheck dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installcheck-local installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am
 
+
+clean-local:
+	$(SHELL) $(top_srcdir)/tests/testsuite --clean
+
+check-local: atconfig $(top_srcdir)/tests/testsuite
+	$(SHELL) $(top_srcdir)/tests/testsuite
+
+installcheck-local:
+	$(SHELL) $(top_srcdir)/tests/testsuite \
+		AUTOTEST_PATH=$(exec_prefix)/bin:$(exec_prefix)/libexec
+
+$(top_srcdir)/tests/package.m4: $(top_srcdir)/configure.ac
+	{								   \
+	  echo '# Signature of the current package.';			   \
+	  echo 'm4_define([AT_PACKAGE_NAME],      [@PACKAGE_NAME@])';	   \
+	  echo 'm4_define([AT_PACKAGE_TARNAME],   [@PACKAGE_TARNAME@])';   \
+	  echo 'm4_define([AT_PACKAGE_VERSION],   [@PACKAGE_VERSION@])';   \
+	  echo 'm4_define([AT_PACKAGE_STRING],    [@PACKAGE_STRING@])';	   \
+	  echo 'm4_define([AT_PACKAGE_BUGREPORT], [@PACKAGE_BUGREPORT@])'; \
+	  echo 'm4_define([AT_PACKAGE_URL],       [@PACKAGE_URL@])';	   \
+	} >$(top_srcdir)/tests/package.m4
+
+$(top_srcdir)/tests/testsuite: tests/package.m4 tests/testsuite.at $(TESTFILES)
+	$(AUTOM4TE) --language=autotest -I $(top_srcdir)/tests \
+		$(top_srcdir)/tests/testsuite.at -o $@.tmp
+	mv $@.tmp $@
+
+atconfig: $(top_builddir)/config.status
+	cd $(top_builddir) && $(SHELL) ./config.status ./atconfig
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
