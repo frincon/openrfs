@@ -657,13 +657,13 @@ static struct fuse_operations xmp_oper = {
 
 static struct fuse_opt myfs_opts[] =
   { MYFS_OPT ("port=%i", port, 0), MYFS_OPT ("peername=%s", peer_name, 0),
-MYFS_OPT ("path=%s", path, 0),
+  MYFS_OPT ("path=%s", path, 0),
   MYFS_OPT ("peerport=%i", peer_port, 0), MYFS_OPT ("database=%s", database,
 						    0),
-    MYFS_OPT ("conflicts=%s", conflicts, 0),
+  MYFS_OPT ("conflicts=%s", conflicts, 0),
 
   FUSE_OPT_KEY ("-V", KEY_VERSION), FUSE_OPT_KEY ("--version", KEY_VERSION),
-    FUSE_OPT_KEY ("-h", KEY_HELP),
+  FUSE_OPT_KEY ("-h", KEY_HELP),
   FUSE_OPT_KEY ("--help", KEY_HELP), FUSE_OPT_END
 };
 
