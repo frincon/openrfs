@@ -38,7 +38,7 @@
 #include "queue.h"
 #include "executer.h"
 #include "receiver.h"
-#include "utils.c"
+#include "utils.h"
 
 pthread_t _thread_receiver = NULL;
 

@@ -758,16 +758,28 @@ main (int argc, char **argv)
   struct fuse_args args = FUSE_ARGS_INIT (argc, argv);
   memset (&config, 0, sizeof (config));
   if (fuse_opt_parse (&args, &config, myfs_opts, myfs_opt_proc))
-    error (EXIT_FAILURE, 0, "Error en los parametros");
+    {
+      utils_error ("Command line arguments error");
+      exit (EXIT_FAILURE);
+    }
 
   if (config.port == 0)
-    error (EXIT_FAILURE, 0, "No port specified");
+    {
+      utils_error ("No port specified");
+      exit (EXIT_FAILURE);
+    }
 
   if (config.peer_name == NULL)
-    error (EXIT_FAILURE, 0, "No host specified");
+    {
+      utils_error ("No host specified");
+      exit (EXIT_FAILURE);
+    }
 
   if (config.peer_port == 0)
-    error (EXIT_FAILURE, 0, "No peer port specified");
+    {
+      utils_error ("No peer port specified");
+      exit (EXIT_FAILURE);
+    }
 
   queue_init ();
 

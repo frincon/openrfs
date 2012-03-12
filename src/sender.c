@@ -30,6 +30,7 @@
 #include "opendfs.h"
 #include "queue.h"
 #include "sender.h"
+#include "utils.h"
 
 void *_sender_run (void *ptr);
 pthread_t _thread_sender;
@@ -62,12 +63,15 @@ _sender_run (void *ptr)
   int sock = (*(int *) ptr);
   fflush (stdout);
 
+  utils_debug ("Sender thread up and running");
+
   //Esta es la tarea de envio
   while (!_is_sender_stopped)
     {
       queue_operation operation;
       int ret;
       ret = queue_get_operation (&operation);
+      utils_trace ("Sender get operation: %i", ret);
       if (ret != 0)
 	{
 	  int writed;

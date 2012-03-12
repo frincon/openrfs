@@ -36,7 +36,7 @@
 
 #include "opendfs.h"
 #include "queue.h"
-#include "utils.c"
+#include "utils.h"
 #include "executer.h"
 
 enum
@@ -1208,6 +1208,7 @@ executer_receive (int sock, mensaje * mens, const char *file)
 	    }
 	  break;
 	case OPENDFS_CREATE_DIR:
+	  // TODO
 	  error (EXIT_FAILURE, 0,
 		 "Arreglar esto: se ha creado un directorio que hay en otro");
 	  break;

@@ -27,7 +27,8 @@
 #include "utils.h"
 
 void
-utils_log (int level, char *file_name, char *function, char *template, ...)
+utils_log (int level, const char *file_name, const char *function,
+	   const char *template, ...)
 {
   va_list arguments;
   if (level >= OPENDFS_TRACE_LEVEL)
@@ -42,16 +43,16 @@ utils_log (int level, char *file_name, char *function, char *template, ...)
 
       if (file_name != NULL && function != NULL)
 	{
-	  sprintf (message, "%s: %s:%s: %s", MY_NAME, file_name, function,
+	  sprintf (message, "%s: %s:%s: %s\n", MY_NAME, file_name, function,
 		   buf);
 	}
       else if (file_name != NULL)
 	{
-	  sprintf (message, "%s: %s: %s", MY_NAME, file_name, buf);
+	  sprintf (message, "%s: %s: %s\n", MY_NAME, file_name, buf);
 	}
       else
 	{
-	  sprintf (message, "%s: %s", MY_NAME, buf);
+	  sprintf (message, "%s: %s\n", MY_NAME, buf);
 	}
 
       va_end (arguments);

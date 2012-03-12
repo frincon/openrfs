@@ -33,6 +33,7 @@
 #include <stdbool.h>
 
 #include "opendfs.h"
+#include "utils.h"
 #include "client.h"
 
 #define _CLIENT_SLEEP_SECONDS 10
@@ -49,6 +50,7 @@ _client_run (void *ptr)
   char buffer[MAGIC_LEN];
   int bytes_readed;
 
+  utils_debug ("Client start and running");
   do
     {
       /* Create the socket. */
@@ -74,6 +76,7 @@ _client_run (void *ptr)
       else
 	{
 
+	  utils_debug ("Client connect to peer, sending magic");
 	  //Send Magic
 	  write (sock, MAGIC_SERVER, MAGIC_LEN - 1);
 
@@ -86,6 +89,7 @@ _client_run (void *ptr)
 		("Receive bad magic number from peer, closing socket");
 	      close (sock);
 	    }
+	  utils_debug ("Client receive good magic. Start sender thread");
 	  if (strcmp (MAGIC_SERVER, buffer) == 0)
 	    {
 	      //The magic is OK, start send thread
@@ -96,6 +100,7 @@ _client_run (void *ptr)
 		  close (sock);
 		}
 
+	      utils_debug ("Client wait auntil sender thread finish");
 	      //Wait for thread to termitate
 	      pthread_join (thread, NULL);
 	    }

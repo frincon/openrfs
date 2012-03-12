@@ -33,7 +33,8 @@ enum
 };
 
 void
-utils_log (int level, char *file_name, char *function, char *pattern, ...);
+utils_log (int level, const char *file_name, const char *function,
+	   const char *template, ...);
 
 #define utils_warn(fmt, arg...)                            \
     do { utils_log(UTILS_WARNING, __FILE__, __FUNCTION__,  fmt , ##arg);  \
