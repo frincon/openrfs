@@ -41,6 +41,7 @@ sender_init (int sock, pthread_t * pthread)
 {
   int ret;
   static int sock2;
+  sock2 = sock;
   ret = pthread_create (&_thread_sender, NULL, _sender_run, &sock2);
   *pthread = _thread_sender;
   return EXIT_SUCCESS;
