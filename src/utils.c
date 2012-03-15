@@ -39,7 +39,7 @@ utils_log (int level, const char *file_name, const char *function,
       va_start (arguments, template);
 
       //Print message in buf
-      vsnprintf (buf, sizeof (buf) - 1, template, arguments);
+      vsnprintf (buf, strlen (buf) - 1, template, arguments);
 
       if (file_name != NULL && function != NULL)
 	{

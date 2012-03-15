@@ -593,14 +593,15 @@ at_change_dir=false
 # List of the tested programs.
 at_tested='opendfs'
 # List of the all the test groups.
-at_groups_all=' 1 2'
+at_groups_all=' 1 2 3'
 # As many question marks as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
 at_format='?'
 # Description of all the test groups.
-at_help_all="1;general.at:42;sinc: create file;sinc;
-2;general.at:57;sinc: create directory;sinc;
+at_help_all="1;general.at:47;sinc: create file;sinc;
+2;general.at:62;sinc: create directory;sinc;
+3;general.at:74;sinc: modify file;sinc;
 "
 
 # at_fn_validate_ranges NAME...
@@ -612,7 +613,7 @@ at_fn_validate_ranges ()
   for at_grp
   do
     eval at_value=\$$at_grp
-    if test $at_value -lt 1 || test $at_value -gt 2; then
+    if test $at_value -lt 1 || test $at_value -gt 3; then
       $as_echo "invalid test group: $at_value" >&2
       exit 1
     fi
@@ -1967,20 +1968,21 @@ exit 0
 ## Actual tests. ##
 ## ------------- ##
 #AT_START_1
-# 1. general.at:42: sinc: create file
-at_setup_line='general.at:42'
+# 1. general.at:47: sinc: create file
+at_setup_line='general.at:47'
 at_desc="sinc: create file"
 at_desc_line="  1: $at_desc                              "
 $at_quiet $as_echo_n "$at_desc_line"
 at_xfail=no
 echo "#                             -*- compilation -*-" >> "$at_group_log"
 (
-  $as_echo "1. general.at:42: testing ..."
+  $as_echo "1. general.at:47: testing ..."
   $at_traceon
 
 
 
 
+echo
 mkdir testdir
 mkdir testdir/1
 mkdir testdir/2
@@ -1990,9 +1992,13 @@ mkdir mountdir/2
 mkdir database
 
 
-opendfs mountdir/1 -o port=5001,peername=localhost,peerport=5000,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=5000,peername=localhost,peerport=5001,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
-sleep 11
+declare -i PUERTO1
+declare -i PUERTO2
+PUERTO1=($RANDOM*5000/32768)+5000
+PUERTO2=PUERTO1+1
+opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+sleep 2
 
 
 cp /etc/hosts mountdir/1
@@ -2000,19 +2006,19 @@ sleep 4
 
 
 pkill opendfs
-sleep 10
+sleep 1
 
 
 { set +x
-$as_echo "$at_srcdir/general.at:53: diff testdir/1/hosts testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:53"
+$as_echo "$at_srcdir/general.at:58: diff testdir/1/hosts testdir/2/hosts"
+at_fn_check_prepare_trace "general.at:58"
 ( $at_check_trace; diff testdir/1/hosts testdir/2/hosts
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:53"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:58"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
@@ -2022,20 +2028,20 @@ $at_traceon; }
 read at_status <"$at_status_file"
 #AT_STOP_1
 #AT_START_2
-# 2. general.at:57: sinc: create directory
-at_setup_line='general.at:57'
+# 2. general.at:62: sinc: create directory
+at_setup_line='general.at:62'
 at_desc="sinc: create directory"
 at_desc_line="  2: $at_desc                         "
 $at_quiet $as_echo_n "$at_desc_line"
 at_xfail=no
 echo "#                             -*- compilation -*-" >> "$at_group_log"
 (
-  $as_echo "2. general.at:57: testing ..."
+  $as_echo "2. general.at:62: testing ..."
   $at_traceon
 
 
 
-
+echo
 mkdir testdir
 mkdir testdir/1
 mkdir testdir/2
@@ -2045,9 +2051,13 @@ mkdir mountdir/2
 mkdir database
 
 
-opendfs mountdir/1 -o port=5001,peername=localhost,peerport=5000,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=5000,peername=localhost,peerport=5001,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
-sleep 11
+declare -i PUERTO1
+declare -i PUERTO2
+PUERTO1=($RANDOM*5000/32768)+5000
+PUERTO2=PUERTO1+1
+opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+sleep 2
 
 
 mkdir mountdir/1/prueba
@@ -2055,19 +2065,18 @@ sleep 4
 
 
 pkill opendfs
-sleep 10
-
+sleep 1
 
 { set +x
-$as_echo "$at_srcdir/general.at:68: test -d testdir/2/prueba"
-at_fn_check_prepare_trace "general.at:68"
+$as_echo "$at_srcdir/general.at:71: test -d testdir/2/prueba"
+at_fn_check_prepare_trace "general.at:71"
 ( $at_check_trace; test -d testdir/2/prueba
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:68"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:71"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
@@ -2076,3 +2085,63 @@ $at_traceon; }
 ) 5>&1 2>&1 | eval $at_tee_pipe
 read at_status <"$at_status_file"
 #AT_STOP_2
+#AT_START_3
+# 3. general.at:74: sinc: modify file
+at_setup_line='general.at:74'
+at_desc="sinc: modify file"
+at_desc_line="  3: $at_desc                              "
+$at_quiet $as_echo_n "$at_desc_line"
+at_xfail=no
+echo "#                             -*- compilation -*-" >> "$at_group_log"
+(
+  $as_echo "3. general.at:74: testing ..."
+  $at_traceon
+
+
+
+echo
+mkdir testdir
+mkdir testdir/1
+mkdir testdir/2
+mkdir mountdir
+mkdir mountdir/1
+mkdir mountdir/2
+mkdir database
+
+cp /etc/hosts testdir/1
+cp /etc/hosts testdir/2
+
+declare -i PUERTO1
+declare -i PUERTO2
+PUERTO1=($RANDOM*5000/32768)+5000
+PUERTO2=PUERTO1+1
+opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+sleep 2
+
+
+cat /etc/services >> mountdir/1/hosts
+sleep 10
+
+
+pkill opendfs
+sleep 1
+
+{ set +x
+$as_echo "$at_srcdir/general.at:85: diff testdir/1/hosts testdir/2/hosts"
+at_fn_check_prepare_trace "general.at:85"
+( $at_check_trace; diff testdir/1/hosts testdir/2/hosts
+) >>"$at_stdout" 2>>"$at_stderr"
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:85"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+  set +x
+  $at_times_p && times >"$at_times_file"
+) 5>&1 2>&1 | eval $at_tee_pipe
+read at_status <"$at_status_file"
+#AT_STOP_3

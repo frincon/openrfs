@@ -1147,28 +1147,12 @@ executer_receive (int sock, mensaje * mens, const char *file)
       switch (mens->operacion)
 	{
 	case OPENDFS_DELETE:
-	  switch (operation.operation)
-	    {
-	    case OPENDFS_DELETE:
-	      //Borrado -> Borrado (Nada que hacer)
-	      return EXIT_SUCCESS;
-	      break;
-	    case OPENDFS_MODIFY:
-	      //Puede que sea antes o despues
-	      if (time2 > time1)
-		{
-		  //Borrado -> Modificado(Despues) (Enviar al otro)
-		  job.next_operation = _executer_send_revert;
-		  ret = _executer_run_job (&job);
-		}
-	      else
-		{
-		  //Borrado -> Modificado(Antes) (Copiar y Borrar)
-		  job.next_operation = _executer_delete;
-		  ret = _executer_run_job (&job);
-		}
-	      break;
-	    }
+	  if(time1>time2) {
+              job.next_operation = _executer_delete;
+              ret = _executer_run_job (&job);
+	  } else {
+	      ret = EXECUTER_END;
+	  }
 	  break;
 	case OPENDFS_MODIFY:
 	  switch (operation.operation)

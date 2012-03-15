@@ -17,6 +17,7 @@
 
 m4_define([M_OPENDFS_PREPARE],
 [
+echo $1
 mkdir testdir
 mkdir testdir/1
 mkdir testdir/2
@@ -28,15 +29,19 @@ mkdir database
 
 m4_define([M_OPENDFS_MOUNT],
 [
-opendfs mountdir/1 -o port=5001,peername=localhost,peerport=5000,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=5000,peername=localhost,peerport=5001,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
-sleep 11
+declare -i PUERTO1
+declare -i PUERTO2
+PUERTO1=($RANDOM*5000/32768)+5000
+PUERTO2=PUERTO1+1
+opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+sleep 2
 ])
 
 m4_define([M_OPENDFS_FINISH],
 [
 pkill opendfs
-sleep 10
+sleep 1
 ])
 
 AT_SETUP([sinc: create file])
@@ -53,10 +58,9 @@ M_OPENDFS_FINISH
 AT_CHECK([diff testdir/1/hosts testdir/2/hosts],0)
 AT_CLEANUP
 
-
+#######################################################333
 AT_SETUP([sinc: create directory])
 AT_KEYWORDS([sinc])
-
 M_OPENDFS_PREPARE
 M_OPENDFS_MOUNT
 
@@ -64,6 +68,20 @@ mkdir mountdir/1/prueba
 sleep 4
 
 M_OPENDFS_FINISH
-
 AT_CHECK([test -d testdir/2/prueba],0)
 AT_CLEANUP
+##################################################33
+AT_SETUP([sinc: modify file])
+AT_KEYWORDS([sinc])
+M_OPENDFS_PREPARE
+cp /etc/hosts testdir/1
+cp /etc/hosts testdir/2
+M_OPENDFS_MOUNT
+
+cat /etc/services >> mountdir/1/hosts
+sleep 10
+
+M_OPENDFS_FINISH
+AT_CHECK([diff testdir/1/hosts testdir/2/hosts],0)
+AT_CLEANUP
+##################################################33
