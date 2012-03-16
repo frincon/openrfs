@@ -5,6 +5,9 @@
 autom4te.cache
 *~
 
+testsuite.dir
+testsuite.log
+
 *.o
 *.gcda
 *.gcno
