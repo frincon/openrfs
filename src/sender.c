@@ -52,12 +52,12 @@ sender_init (int sock, pthread_t * pthread)
 void
 sender_stop ()
 {
-  utils_debug("Sender stopping");
+  utils_debug ("Sender stopping");
   _is_sender_stopped = 1;
-  utils_trace("Thread: %i", _thread_sender);
-  if(_thread_sender!=NULL)
+  utils_trace ("Thread: %i", _thread_sender);
+  if (_thread_sender != NULL)
     pthread_join (_thread_sender, NULL);
-  utils_trace("Thread: %i", _thread_sender);
+  utils_trace ("Thread: %i", _thread_sender);
 }
 
 void *
@@ -107,32 +107,35 @@ _sender_run (void *ptr)
 	}
       else
 	{
-          mensaje mens;
-          int writed;
-          int readed;
-          // TODO make better whith pthread
+	  mensaje mens;
+	  int writed;
+	  int readed;
+	  // TODO make better whith pthread
 	  sleep (1);
 	  // Send Ping and receive pong
 	  mens.operacion = OPENDFS_PING;
-	  writed = write (sock, &mens, sizeof(mens));
-	  if(writed != sizeof(mens)) {
-	      utils_warn("The socket is not valid, sending ping");
+	  writed = write (sock, &mens, sizeof (mens));
+	  if (writed != sizeof (mens))
+	    {
+	      utils_warn ("The socket is not valid, sending ping");
 	      break;
-	  }
-	  readed = read(sock, &mens, sizeof(mens));
-	  if(readed != sizeof(mens)) {
-	      utils_warn("Error reading pong. Closing sender");
+	    }
+	  readed = read (sock, &mens, sizeof (mens));
+	  if (readed != sizeof (mens))
+	    {
+	      utils_warn ("Error reading pong. Closing sender");
 	      break;
-	  }
-	  if(mens.operacion != OPENDFS_PONG) {
-	      utils_warn("Error, no pong received. Closing sender");
+	    }
+	  if (mens.operacion != OPENDFS_PONG)
+	    {
+	      utils_warn ("Error, no pong received. Closing sender");
 	      break;
-	  }
+	    }
 	}
       // Check for socket is open
 
     }
-  utils_debug("Closing sender socket");
+  utils_debug ("Closing sender socket");
   close (sock);
   _thread_sender = 0;
   return NULL;

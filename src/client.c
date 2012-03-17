@@ -43,69 +43,75 @@ pthread_t _client_thread;
 bool _client_is_stopped = false;
 
 void *
-_client_run(void *ptr)
+_client_run (void *ptr)
 {
   int sock;
   struct sockaddr_in servername;
   char buffer[MAGIC_LEN];
   int bytes_readed;
 
-  utils_debug("Client start and running");
+  utils_debug ("Client start and running");
   do
     {
       /* Create the socket. */
-      sock = socket(PF_INET, SOCK_STREAM, 0);
+      sock = socket (PF_INET, SOCK_STREAM, 0);
       if (sock < 0)
-        {
-          utils_fatal("Error creating socket: %s", strerror (errno));
-          exit(EXIT_FAILURE);
-        }
+	{
+	  utils_fatal ("Error creating socket: %s", strerror (errno));
+	  exit (EXIT_FAILURE);
+	}
 
       /* Connect to the server. */
-      init_sockaddr(&servername, config.peer_name, config.peer_port);
-      if (0 > connect(sock, (struct sockaddr *) &servername, sizeof(servername)))
-        {
-          utils_error("Error connecting to %s:%i: %s ", config.peer_name, config.peer_port, strerror (errno));
-          utils_debug("Sleeping client for %i seconds", _CLIENT_SLEEP_SECONDS);
-          close(sock);
-          sleep(_CLIENT_SLEEP_SECONDS);
-        }
+      init_sockaddr (&servername, config.peer_name, config.peer_port);
+      if (0 >
+	  connect (sock, (struct sockaddr *) &servername,
+		   sizeof (servername)))
+	{
+	  utils_error ("Error connecting to %s:%i: %s ", config.peer_name,
+		       config.peer_port, strerror (errno));
+	  utils_debug ("Sleeping client for %i seconds",
+		       _CLIENT_SLEEP_SECONDS);
+	  close (sock);
+	  sleep (_CLIENT_SLEEP_SECONDS);
+	}
       else
-        {
+	{
 
-          utils_debug("Client connect to peer, sending magic");
-          //Send Magic
-          write(sock, MAGIC_SERVER, MAGIC_LEN - 1);
+	  utils_debug ("Client connect to peer, sending magic");
+	  //Send Magic
+	  write (sock, MAGIC_SERVER, MAGIC_LEN - 1);
 
-          //Recive Magic
-          bytes_readed = read(sock, buffer, MAGIC_LEN - 1);
-          buffer[MAGIC_LEN - 1] = '\0';
-          if (bytes_readed != MAGIC_LEN - 1)
-            {
-              utils_error("Receive bad magic number from peer, closing socket");
-              close(sock);
-            }
-          utils_debug("Client receive good magic. Start sender thread");
-          if (strcmp(MAGIC_SERVER, buffer) == 0)
-            {
-              //The magic is OK, start send thread
-              pthread_t thread;
-              if (0 > sender_init(sock, &thread))
-                {
-                  utils_error("Error starting sender");
-                  close(sock);
-                }
+	  //Recive Magic
+	  bytes_readed = read (sock, buffer, MAGIC_LEN - 1);
+	  buffer[MAGIC_LEN - 1] = '\0';
+	  if (bytes_readed != MAGIC_LEN - 1)
+	    {
+	      utils_error
+		("Receive bad magic number from peer, closing socket");
+	      close (sock);
+	    }
+	  utils_debug ("Client receive good magic. Start sender thread");
+	  if (strcmp (MAGIC_SERVER, buffer) == 0)
+	    {
+	      //The magic is OK, start send thread
+	      pthread_t thread;
+	      if (0 > sender_init (sock, &thread))
+		{
+		  utils_error ("Error starting sender");
+		  close (sock);
+		}
 
-              utils_debug("Client wait until sender thread finish");
-              //Wait for thread to termitate
-              pthread_join(thread, NULL);
-            }
-          else
-            {
-              utils_error("Receive bad magic number from peer, closing socket");
-              close(sock);
-            }
-        }
+	      utils_debug ("Client wait until sender thread finish");
+	      //Wait for thread to termitate
+	      pthread_join (thread, NULL);
+	    }
+	  else
+	    {
+	      utils_error
+		("Receive bad magic number from peer, closing socket");
+	      close (sock);
+	    }
+	}
     }
   while (!_client_is_stopped);
   return NULL;
@@ -115,20 +121,20 @@ _client_run(void *ptr)
  * Start client socket and sender thread
  */
 void
-client_init(pthread_t * pthread)
+client_init (pthread_t * pthread)
 {
 
   int ret;
-  ret = pthread_create(&_client_thread, NULL, _client_run, NULL);
+  ret = pthread_create (&_client_thread, NULL, _client_run, NULL);
   if (pthread != NULL)
     *pthread = _client_thread;
 }
 
 void
-client_stop()
+client_stop ()
 {
-  utils_debug("Client stopping");
+  utils_debug ("Client stopping");
   _client_is_stopped = true;
-  sender_stop();
-  pthread_join(_client_thread, NULL);
+  sender_stop ();
+  pthread_join (_client_thread, NULL);
 }

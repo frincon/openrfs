@@ -45,7 +45,7 @@ pthread_t _thread_receiver = NULL;
 int _is_receiver_stopped = 0;
 
 void *
-_receiver_run(void *ptr)
+_receiver_run (void *ptr)
 {
   fd_set active_fd_set, read_fd_set;
   int i;
@@ -58,93 +58,96 @@ _receiver_run(void *ptr)
 
   int sock = (*(int *) ptr);
 
-  fflush(stdout);
+  fflush (stdout);
   //Esta es la tarea de envio
   while (!_is_receiver_stopped)
     {
 
-      FD_ZERO(&active_fd_set);
-      FD_SET(sock, &active_fd_set);
+      FD_ZERO (&active_fd_set);
+      FD_SET (sock, &active_fd_set);
       read_fd_set = active_fd_set;
 
-      int ret = select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL);
-      fflush(stdout);
+      int ret = select (FD_SETSIZE, &read_fd_set, NULL, NULL, NULL);
+      fflush (stdout);
       if (ret < 0)
-        {
-          error(EXIT_FAILURE, errno, "Error waiting for data");
-        }
+	{
+	  error (EXIT_FAILURE, errno, "Error waiting for data");
+	}
       else if (FD_ISSET (sock, &read_fd_set))
-        {
-          int leido;
-          char *file;
+	{
+	  int leido;
+	  char *file;
 
-          // Hay que leer
-          mensaje mens;
-          leido = read(sock, &mens, sizeof(mens));
-          if (leido == 0)
-            {
-              //El socket se ha cerrado
-              utils_debug("The socket has been closed");
-              break;
-            }
-          if (leido != sizeof(mens))
-            {
-              utils_error("Error reading file message from peer: %s", strerror (errno));
-              break;
-            }
-          if (mens.operacion == OPENDFS_PING)
-            {
-              // Send PONG
-              mensaje mens2;
-              int writed;
-              mens2.operacion = OPENDFS_PONG;
-              writed = write(sock, &mens2, sizeof(mens2));
-              if (writed != sizeof(mens2))
-                {
-                  utils_warn("Error sending pong. Closing receiver");
-                  break;
-                }
-            }
-          else
-            {
-              file = malloc(mens.file_size);
-              leido = read(sock, file, mens.file_size);
-              if (leido != mens.file_size)
-                {
-                  utils_error("Error reading file name from peer: %s", strerror (errno));
-                  break;
-                }
+	  // Hay que leer
+	  mensaje mens;
+	  leido = read (sock, &mens, sizeof (mens));
+	  if (leido == 0)
+	    {
+	      //El socket se ha cerrado
+	      utils_debug ("The socket has been closed");
+	      break;
+	    }
+	  if (leido != sizeof (mens))
+	    {
+	      utils_error ("Error reading file message from peer: %s",
+			   strerror (errno));
+	      break;
+	    }
+	  if (mens.operacion == OPENDFS_PING)
+	    {
+	      // Send PONG
+	      mensaje mens2;
+	      int writed;
+	      mens2.operacion = OPENDFS_PONG;
+	      writed = write (sock, &mens2, sizeof (mens2));
+	      if (writed != sizeof (mens2))
+		{
+		  utils_warn ("Error sending pong. Closing receiver");
+		  break;
+		}
+	    }
+	  else
+	    {
+	      file = malloc (mens.file_size);
+	      leido = read (sock, file, mens.file_size);
+	      if (leido != mens.file_size)
+		{
+		  utils_error ("Error reading file name from peer: %s",
+			       strerror (errno));
+		  break;
+		}
 
-              utils_trace("reading from socket, operation: %i, file: %s", mens.operacion, file);
-              ret = executer_receive(sock, &mens, file);
-              free(file);
-              fflush(stdout);
-            }
-        }
+	      utils_trace ("reading from socket, operation: %i, file: %s",
+			   mens.operacion, file);
+	      ret = executer_receive (sock, &mens, file);
+	      free (file);
+	      fflush (stdout);
+	    }
+	}
     }
   utils_debug ("Closing receiver socket");
-  close(sock);
-  _thread_receiver=0;
+  close (sock);
+  _thread_receiver = 0;
   return NULL;
 }
 
 int
-receiver_init(int sock, pthread_t * pthread)
+receiver_init (int sock, pthread_t * pthread)
 {
   int ret;
   static int sock2;
   sock2 = sock;
   _is_receiver_stopped = 0;
-  ret = pthread_create(&_thread_receiver, NULL, _receiver_run, &sock2);
+  ret = pthread_create (&_thread_receiver, NULL, _receiver_run, &sock2);
   *pthread = _thread_receiver;
   return ret;
 }
 
 void
-receiver_stop()
+receiver_stop ()
 {
-  utils_debug("Stopping receiver");
+  utils_debug ("Stopping receiver");
   _is_receiver_stopped = 1;
   if (_thread_receiver != NULL)
-    pthread_join(_thread_receiver, NULL);
+    pthread_join (_thread_receiver, NULL);
 }

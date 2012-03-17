@@ -1147,12 +1147,15 @@ executer_receive (int sock, mensaje * mens, const char *file)
       switch (mens->operacion)
 	{
 	case OPENDFS_DELETE:
-	  if(time1>time2) {
-              job.next_operation = _executer_delete;
-              ret = _executer_run_job (&job);
-	  } else {
+	  if (time1 > time2)
+	    {
+	      job.next_operation = _executer_delete;
+	      ret = _executer_run_job (&job);
+	    }
+	  else
+	    {
 	      ret = EXECUTER_END;
-	  }
+	    }
 	  break;
 	case OPENDFS_MODIFY:
 	  switch (operation.operation)
