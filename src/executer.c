@@ -181,7 +181,7 @@ _executer_conflict_path (const char *file, char **path)
   strcat (path2, ".");
   strcat (path2, date_formatted);
 
-  utils_trace ("file: '%s' conflict path: '%s'");
+  utils_trace ("file: '%s' conflict path: '%s'", file, path2);
 
   *path = path2;
 }
@@ -325,6 +325,13 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	{
 	  fprintf (stderr, "_executer_in_callback: NO HAY MAS...\n");
 	  // No hay mas, se envia el final
+	  if (buf->avail_in > 0)
+	    {
+	      //Habia, copiamos
+	      memcpy (executer->buf, buf2, buf->avail_in);
+	      free (buf2);
+	    }
+
 	  buf->eof_in = true;
 	  return RS_DONE;
 	}
@@ -341,6 +348,13 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	  fprintf (stderr,
 		   "_executer_in_callback: Se ha alcanzado el final del fichero\n");
 	  //No hay mas, se envia el final
+	  if (buf->avail_in > 0)
+	    {
+	      //Habia, copiamos
+	      memcpy (executer->buf, buf2, buf->avail_in);
+	      free (buf2);
+	    }
+
 	  buf->eof_in = true;
 	  return RS_DONE;
 	}

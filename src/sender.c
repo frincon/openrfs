@@ -75,7 +75,7 @@ _sender_run (void *ptr)
       queue_operation operation;
       int ret;
       ret = queue_get_operation (&operation);
-      utils_trace ("Sender get operation: %i", ret);
+      // utils_trace ("Sender get operation: %i", ret);
       if (ret != 0)
 	{
 	  int writed;
