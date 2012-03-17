@@ -8,6 +8,8 @@ autom4te.cache
 testsuite.dir
 testsuite.log
 
+atconfig
+
 *.o
 *.gcda
 *.gcno
