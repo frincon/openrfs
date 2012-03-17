@@ -1,4 +1,5 @@
 SUBDIRS=src
+TESTFILES = tests/general.at
 
 clean-local:
 	$(SHELL) $(top_srcdir)/tests/testsuite --clean
