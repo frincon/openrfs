@@ -38,6 +38,7 @@ opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(
 sleep 2
 ])
 
+
 m4_define([M_OPENDFS_FINISH],
 [
 pkill opendfs
@@ -83,5 +84,61 @@ sleep 10
 
 M_OPENDFS_FINISH
 AT_CHECK([diff testdir/1/hosts testdir/2/hosts],0)
+AT_CLEANUP
+##################################################33
+
+##################################################33
+AT_SETUP([sinc: delete file])
+AT_KEYWORDS([sinc])
+M_OPENDFS_PREPARE
+cp /etc/hosts testdir/1
+cp /etc/hosts testdir/2
+M_OPENDFS_MOUNT
+
+rm mountdir/1/hosts
+sleep 10
+
+M_OPENDFS_FINISH
+AT_CHECK([test -e  testdir/2/hosts],1)
+AT_CHECK([test -e  testdir/2/.conflicts/*hosts*], 0)
+AT_CLEANUP
+##################################################33
+
+
+##################################################33
+AT_SETUP([sinc: modify with conflict])
+AT_KEYWORDS([sinc])
+M_OPENDFS_PREPARE
+cp /etc/hosts testdir/1
+cp /etc/hosts testdir/2
+
+declare -i PUERTO1
+declare -i PUERTO2
+PUERTO1=($RANDOM*5000/32768)+5000
+PUERTO2=PUERTO1+1
+
+## Mount first folder
+opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+sleep 2
+echo "ONE" >> mountdir/1/hosts
+cp mountdir/1/hosts testdir/hosts.1
+M_OPENDFS_FINISH
+
+## Mount second folder
+opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+sleep 2
+echo "TWO" >> mountdir/2/hosts
+cp mountdir/2/hosts testdir/hosts.2
+M_OPENDFS_FINISH
+
+
+## mount all
+M_OPENDFS_MOUNT
+sleep 10
+M_OPENDFS_FINISH
+
+AT_CHECK([diff testdir/hosts.2 testdir/1/hosts],0)
+AT_CHECK([diff testdir/hosts.2 testdir/2/hosts],0)
+AT_CHECK([diff testdir/hosts.1 testdir/1/.conflicts/*hosts*],0)
 AT_CLEANUP
 ##################################################33
