@@ -462,43 +462,8 @@ _executer_create_temp (const char *realpath, char **temppath)
 }
 
 executer_result
-_executer_change_permission (executer_job_t * job)
-{
-  struct stat *stat2;
-
-  stat2 = (struct stat *) job->opaque;
-
-  //Change mode
-  chmod (job->realpath, stat2->st_mode);
-  chown (job->realpath, stat2->st_uid, stat2->st_gid);
-  //TODO check for errors
-  return EXECUTER_END;
-}
-
-executer_result
-_executer_receive_stat (executer_job_t * job)
-{
-  int leido;
-  struct stat stat2;
-
-  leido = _executer_read_buffer (job->peer_sock, &stat2, sizeof (stat2));
-  if (leido != sizeof (stat2))
-    {
-      utils_error ("Error reading stat data from peer: %s", strerror (errno));
-      return EXECUTER_ERROR;
-    }
-
-  job->opaque = &stat2;
-  job->next_operation = _executer_change_permission;
-
-  return EXECUTER_RUNNING;
-
-}
-
-executer_result
 _executer_move_temp (executer_job_t * job)
 {
-  char *tempfile = (char *) job->opaque;
   if (job->exists_real)
     {
       int ret = unlink (job->realpath);
@@ -509,18 +474,54 @@ _executer_move_temp (executer_job_t * job)
 	  return EXECUTER_ERROR;
 	}
     }
-  int ret = rename (tempfile, job->realpath);
+  int ret = rename (job->tempfile, job->realpath);
   if (ret != 0)
     {
-      utils_error ("Error renaming temporal file '%s' to '%s': %s", tempfile,
-		   job->realpath, strerror (errno));
+      utils_error ("Error renaming temporal file '%s' to '%s': %s",
+		   job->tempfile, job->realpath, strerror (errno));
       return EXECUTER_ERROR;
     }
 
-  //Change permis and owner
-  job->next_operation = _executer_receive_stat;
+  return EXECUTER_END;
+}
+
+
+
+executer_result
+_executer_change_permission (executer_job_t * job)
+{
+  struct stat *stat2;
+
+  //Change mode
+  chmod (job->tempfile, job->file_stat->st_mode);
+  chown (job->tempfile, job->file_stat->st_uid, job->file_stat->st_gid);
+
+  job->next_operation = _executer_move_temp;
+
+  //TODO check for errors
   return EXECUTER_RUNNING;
 }
+
+executer_result
+_executer_receive_stat (executer_job_t * job)
+{
+  int leido;
+  static struct stat stat2;
+
+  leido = _executer_read_buffer (job->peer_sock, &stat2, sizeof (stat2));
+  if (leido != sizeof (stat2))
+    {
+      utils_error ("Error reading stat data from peer: %s", strerror (errno));
+      return EXECUTER_ERROR;
+    }
+
+  job->file_stat = &stat2;
+  job->next_operation = _executer_change_permission;
+
+  return EXECUTER_RUNNING;
+
+}
+
 
 executer_result
 _executer_recive_delta (executer_job_t * job)
@@ -588,8 +589,8 @@ _executer_recive_delta (executer_job_t * job)
   free (outrs.buf);
   free (inrs.buf);
 
-  job->next_operation = _executer_move_temp;
-  job->opaque = temppath;
+  job->next_operation = _executer_receive_stat;
+  job->tempfile = temppath;
 
   return EXECUTER_RUNNING;
 }
@@ -646,31 +647,32 @@ _executer_copy_conflict (executer_job_t * job)
   char *target;
   char *command;
   int ret;
+  if (job->copy_conflict)
+    {
+      // TODO optimizar el copiar, porque se puede realizar un enlace duro y luego al parchear deslinkar y mover
 
-  // TODO optimizar el copiar, porque se puede realizar un enlace duro y luego al parchear deslinkar y mover
-
-  char copy_command[] = "cp -a %s %s";
+      char copy_command[] = "cp -a %s %s";
 
 // Cojemos los path
-  _executer_real_path (job->file, &source);
-  _executer_conflict_path (job->file, &target);
+      _executer_real_path (job->file, &source);
+      _executer_conflict_path (job->file, &target);
 
-  command =
-    malloc (strlen (copy_command) + strlen (source) + strlen (target) - 4 +
-	    1);
-  sprintf (command, copy_command, source, target);
+      command =
+	malloc (strlen (copy_command) + strlen (source) + strlen (target) -
+		4 + 1);
+      sprintf (command, copy_command, source, target);
 
-  ret = system (command);
+      ret = system (command);
 
-  free (source);
-  free (target);
+      free (source);
+      free (target);
 
-  if (ret != EXIT_SUCCESS)
-    {
-      utils_error ("Error copying file to conflicts");
-      return EXECUTER_ERROR;
+      if (ret != EXIT_SUCCESS)
+	{
+	  utils_error ("Error copying file to conflicts");
+	  return EXECUTER_ERROR;
+	}
     }
-
   // The next operation is send signature
   job->next_operation = _executer_send_signature;
   return EXECUTER_RUNNING;
@@ -681,11 +683,23 @@ executer_result
 _executer_receive_file (executer_job_t * job)
 {
   FILE *file;
+  char *temppath;
   int operation;
   bool protocol_error = false;
+  int tempfile;
+
+  tempfile = _executer_create_temp (job->realpath, &temppath);
+  if (tempfile == 0)
+    {
+      utils_error ("Error creating temp file for file '%s': %s",
+		   job->realpath, strerror (errno));
+      return EXECUTER_ERROR;
+    }
+
+  job->tempfile = temppath;
 
   // Receive a whole file
-  file = fopen (job->realpath, "w");
+  file = fopen (job->tempfile, "w");
   if (file == 0)
     {
       utils_error ("Error creating file '%s': %s", job->realpath,
@@ -699,7 +713,6 @@ _executer_receive_file (executer_job_t * job)
       size_t leido;
       size_t size;
       char *buf;
-
 
       leido =
 	_executer_read_buffer (job->peer_sock, &operation,
@@ -764,8 +777,6 @@ _executer_check_exists (executer_job_t * job)
   bool *conflict;
   struct stat bufstat;
 
-  conflict = (bool *) job->opaque;
-
   exists = !lstat (job->realpath, &bufstat);
   if (exists)
     {
@@ -779,14 +790,7 @@ _executer_check_exists (executer_job_t * job)
 	  return EXECUTER_ERROR;
 	}
 
-      if (*conflict)
-	{
-	  job->next_operation = _executer_copy_conflict;
-	}
-      else
-	{
-	  job->next_operation = _executer_send_signature;
-	}
+      job->next_operation = _executer_copy_conflict;
       return EXECUTER_RUNNING;
     }
   else
@@ -807,10 +811,16 @@ _executer_check_exists (executer_job_t * job)
 }
 
 int
-_executer_send_revert (int sock, mensaje * mens, const char *file)
+_executer_send_revert (executer_job_t * job)
 {
-  utils_debug ("The file %s has operations after, send revert operation.");
-  return EXIT_SUCCESS;
+  utils_debug ("The file %s has operations after, send nothing operation.");
+  int operacion = _EXECUTER_REVERT;
+  if (!_executer_send_buffer (job->peer_sock, &operacion, sizeof (int)))
+    {
+      utils_error ("Error sending data to peer.");
+      return EXECUTER_ERROR;
+    }
+  return EXECUTER_END;
 }
 
 executer_result
@@ -840,7 +850,7 @@ executer_result
 _executer_send_delta (executer_job_t * job)
 {
   // The opaque pointer is to signature
-  rs_signature_t *signature = (rs_signature_t *) job->opaque;
+  rs_signature_t *signature = job->signature;
   rs_job_t *deltajob;
   char *realpath;
   executer_rs inrs;
@@ -931,7 +941,7 @@ _executer_recive_signature (executer_job_t * job)
     {
       //After receive signature, we need send delta
       job->next_operation = _executer_send_delta;
-      job->opaque = signature;
+      job->signature = signature;
       return EXECUTER_RUNNING;
     }
 
@@ -1064,6 +1074,9 @@ _executer_wait_modify (executer_job_t * job)
       job->next_operation = _executer_send_file;
       return EXECUTER_RUNNING;
       break;
+    case _EXECUTER_REVERT:
+      return EXECUTER_END;
+      break;
     }
   utils_error ("Operation not permited: %i", operation);
   return EXECUTER_ERROR;
@@ -1175,6 +1188,7 @@ executer_receive (int sock, mensaje * mens, const char *file)
 	  switch (operation.operation)
 	    {
 	    case OPENDFS_DELETE:
+	    case OPENDFS_MODIFY:
 	      if (time2 > time1)
 		{
 		  // Modificado -> Borrado(Despues)
@@ -1185,26 +1199,14 @@ executer_receive (int sock, mensaje * mens, const char *file)
 		{
 		  //Modificado -> Borrado(Antes) (Modificar)
 		  job.next_operation = _executer_check_exists;
-		  conflict = true;
-		  job.opaque = &conflict;
+		  job.copy_conflict = true;
 		  ret = _executer_run_job (&job);
 		}
 	      break;
-	    case OPENDFS_MODIFY:
-	      if (time2 > time1)
-		{
-		  //Modificado -> Modificado(Despues)
-		  job.next_operation = _executer_send_revert;
-		  ret = _executer_run_job (&job);
-		}
-	      else
-		{
-		  //Modificado -> Modificado(Antes) (Copiar y Modificar)
-		  job.next_operation = _executer_check_exists;
-		  conflict = true;
-		  job.opaque = &conflict;
-		  ret = _executer_run_job (&job);
-		}
+	    case OPENDFS_CREATE_DIR:
+	      //TODO
+	      error (EXIT_FAILURE, 0,
+		     "Arreglar esto: se ha creado un directorio que hay en otro");
 	      break;
 	    }
 	  break;
@@ -1227,8 +1229,7 @@ executer_receive (int sock, mensaje * mens, const char *file)
 	case OPENDFS_MODIFY:
 	  //Modificado -> No tocado (Modificar sin copiar)
 	  job.next_operation = _executer_check_exists;
-	  conflict = false;
-	  job.opaque = &conflict;
+	  job.copy_conflict = false;
 	  ret = _executer_run_job (&job);
 	  break;
 	case OPENDFS_CREATE_DIR:

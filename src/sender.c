@@ -102,7 +102,7 @@ _sender_run (void *ptr)
 	    }
 
 	  executer_send (sock, &mens, operation.file);
-
+	  queue_delete_operation (&operation);
 	  fflush (stdout);
 	}
       else

@@ -22,6 +22,10 @@
 #ifndef EXECUTER_H_
 #define EXECUTER_H_
 
+#include <stdbool.h>
+#include <sys/stat.h>
+#include <librsync.h>
+
 typedef enum
 {
   EXECUTER_MODIFY = 0, EXECUTER_DELETE = 1, EXECUTER_CREATE_DIR = 2
@@ -44,7 +48,11 @@ struct executer_job
     executer_result (*next_operation) (executer_job_t *);
   int exists_real;
   mode_t mode;
-  void *opaque;			/* pointer opaque send to the next operation */
+  bool copy_conflict;
+  char *tempfile;
+  struct stat *file_stat;
+  struct stat *file_stat_before;	/* store stat at the beginning of the job */
+  rs_signature_t *signature;
 };
 
 executer_result executer_work (executer_job_t * job, void *opaque);

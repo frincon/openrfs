@@ -35,6 +35,7 @@ typedef struct _queue_operation
 void queue_init ();
 void queue_add_operation (queue_operation * operation);
 int queue_get_operation (queue_operation * operation);
+int queue_delete_operation ();
 int queue_get_operation_for_file (const char *file,
 				  queue_operation * operation);
 void queue_close ();

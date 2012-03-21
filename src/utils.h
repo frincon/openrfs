@@ -22,9 +22,13 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include <pthread.h>
+
 #ifndef OPENDFS_TRACE_LEVEL
 #define OPENDFS_TRACE_LEVEL UTILS_INFO
 #endif /* ! OPENDFS_TRACE_LEVEL */
+
+
 
 enum
 {

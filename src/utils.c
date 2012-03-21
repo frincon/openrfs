@@ -22,9 +22,12 @@
 #include <config.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "opendfs.h"
 #include "utils.h"
+
+
 
 void
 utils_log (int level, const char *file_name, const char *function,

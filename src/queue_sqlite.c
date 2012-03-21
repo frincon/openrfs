@@ -30,6 +30,7 @@
 #include <time.h>
 #include <pthread.h>
 #include "opendfs.h"
+#include "utils.h"
 #include "queue.h"
 
 static const char time_format[] = "%Y.%m.%d.%H.%M.%s";
@@ -64,6 +65,8 @@ sqlite3_stmt *select_file_stmt;
 
 /* la base de datos sqlite 3 */
 sqlite3 *database;
+
+int _queue_mutex_flag = 0;
 
 void
 queue_init ()
@@ -224,6 +227,27 @@ _delete_file (const char *file)
 }
 
 int
+queue_delete_operation (queue_operation * operation)
+{
+  queue_operation op;
+  _queue_mutex_flag = 1;
+  pthread_mutex_lock (&_queue_mutex);
+  queue_get_operation (&op);
+  if (memcmp (&(operation->time), &(op.time), sizeof (op.time)) == 0)
+    {
+      _delete_file (op.file);
+    }
+  else
+    {
+      utils_debug ("The operation was changed. Don't delete it");
+    }
+  pthread_mutex_unlock (&_queue_mutex);
+  _queue_mutex_flag = 0;
+  return EXIT_SUCCESS;
+}
+
+
+int
 queue_get_operation (queue_operation * operation)
 {
   int ret;
@@ -232,7 +256,8 @@ queue_get_operation (queue_operation * operation)
   int op;
   int result;
 
-  pthread_mutex_lock (&_queue_mutex);
+  if (_queue_mutex_flag == 0)
+    pthread_mutex_lock (&_queue_mutex);
 
   if (database == NULL || insert_stmt == NULL)
     error (EXIT_FAILURE, 0, "No se ha iniciado la cola");
@@ -253,7 +278,7 @@ queue_get_operation (queue_operation * operation)
       strptime (timestamp, time_format, &operation->time);
 
       //Además realizamos el delete
-      _delete_file (file);
+      //_delete_file (file);
       result = 1;
       break;
     case SQLITE_DONE:
@@ -265,7 +290,8 @@ queue_get_operation (queue_operation * operation)
       break;
     }
   sqlite3_reset (select_stmt);
-  pthread_mutex_unlock (&_queue_mutex);
+  if (_queue_mutex_flag == 0)
+    pthread_mutex_unlock (&_queue_mutex);
   return result;
 }
 
