@@ -321,11 +321,29 @@ static int
 xmp_rename (const char *from, const char *to)
 {
   int res;
+  char *from2;
+  char *to2;
 
-  // TODO
-  res = rename (from, to);
+  convert_path (from, &from2);
+  convert_path (to, &to2);
+
+  res = rename (from2, to2);
   if (res == -1)
     return -errno;
+  else
+    {
+      queue_operation op1;
+      queue_operation op2;
+      op1.file = to;
+      op1.operation = OPENDFS_MODIFY;
+      queue_add_operation (&op1);
+      op2.file = from;
+      op2.operation = OPENDFS_DELETE;
+      queue_add_operation (&op2);
+
+
+    }
+
 
   return 0;
 }
@@ -334,11 +352,24 @@ static int
 xmp_link (const char *from, const char *to)
 {
   int res;
+  char *from2;
+  char *to2;
 
-  //TODO
-  res = link (from, to);
+  convert_path (from, &from2);
+  convert_path (to, &to2);
+  res = link (from2, to2);
+  free (from2);
+  free (to2);
+
   if (res == -1)
     return -errno;
+  else
+    {
+      queue_operation op;
+      op.file = to;
+      op.operation = OPENDFS_MODIFY;
+      queue_add_operation (&op);
+    }
 
   return 0;
 }

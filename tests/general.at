@@ -32,7 +32,13 @@ m4_define([M_OPENDFS_MOUNT],
 declare -i PUERTO1
 declare -i PUERTO2
 PUERTO1=($RANDOM*5000/32768)+5000
-PUERTO2=PUERTO1+1
+while [ "`netstat -an | grep $PUERTO1`" != "" ]; do
+        PUERTO1=($RANDOM*5000/32768)+5000
+done
+PUERTO2=($RANDOM*5000/32768)+5000
+while [ "`netstat -an | grep $PUERTO2`" != "" ]; do
+        PUERTO2=($RANDOM*5000/32768)+5000
+done
 opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
 opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
 sleep 2

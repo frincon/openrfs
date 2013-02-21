@@ -155,6 +155,9 @@ queue_add_operation (queue_operation * op)
 
   pthread_mutex_lock (&_queue_mutex);
 
+  utils_debug ("Add queue operation. Operation: %i File: %s", op->operation,
+	       op->file);
+
   date = time (NULL);
   date_tm = gmtime (&date);
   if (strftime (date_formatted, 50, time_format, date_tm) == 0)
@@ -182,6 +185,7 @@ queue_add_operation (queue_operation * op)
   if (ret == SQLITE_CONSTRAINT)
     {
       // El fichero está en la base de datos
+      utils_debug ("The file is in database, updating it");
 
       ret = sqlite3_bind_text (update_stmt, 1, date_formatted, -1,
 			       SQLITE_TRANSIENT);

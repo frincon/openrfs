@@ -89,8 +89,7 @@ _receiver_run (void *ptr)
 	    }
 	  if (leido != sizeof (mens))
 	    {
-	      utils_error ("Error reading file message from peer: %s",
-			   strerror (errno));
+	      utils_error ("Error reading file message from peer: %s");
 	      break;
 	    }
 	  if (mens.operacion == OPENDFS_PING)

@@ -1,5 +1,5 @@
 #! /bin/sh
-# Generated from tests/testsuite.at by GNU Autoconf 2.65.
+# Generated from tests/testsuite.at by GNU Autoconf 2.68.
 #
 # Copyright (C) 2012 Fernando Rincón. All rights reserved.
 # This copyrighted material is made available to anyone wishing to use, modify,
@@ -17,7 +17,7 @@
 #
 # Author: Fernando Rincón <frm.rincon@gmail.com>
 #
-# Copyright (C) 2009 Free Software Foundation, Inc.
+# Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 #
 # This test suite is free software; the Free Software Foundation gives
 # unlimited permission to copy, distribute and modify it.
@@ -100,6 +100,7 @@ fi
 IFS=" ""	$as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
+as_myself=
 case $0 in #((
   *[\\/]* ) as_myself=$0 ;;
   *) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
@@ -225,11 +226,18 @@ IFS=$as_save_IFS
   # We cannot yet assume a decent shell, so we have to provide a
 	# neutralization value for shells without unset; and this also
 	# works around shells that cannot unset nonexistent variables.
+	# Preserve -v and -x to the replacement shell.
 	BASH_ENV=/dev/null
 	ENV=/dev/null
 	(unset BASH_ENV) >/dev/null 2>&1 && unset BASH_ENV ENV
 	export CONFIG_SHELL
-	exec "$CONFIG_SHELL" "$as_myself" ${1+"$@"}
+	case $- in # ((((
+	  *v*x* | *x*v* ) as_opts=-vx ;;
+	  *v* ) as_opts=-v ;;
+	  *x* ) as_opts=-x ;;
+	  * ) as_opts= ;;
+	esac
+	exec "$CONFIG_SHELL" $as_opts "$as_myself" ${1+"$@"}
 fi
 
     if test x$as_have_required = xno; then :
@@ -327,7 +335,7 @@ $as_echo X"$as_dir" |
       test -d "$as_dir" && break
     done
     test -z "$as_dirs" || eval "mkdir $as_dirs"
-  } || test -d "$as_dir" || as_fn_error "cannot create directory $as_dir"
+  } || test -d "$as_dir" || as_fn_error $? "cannot create directory $as_dir"
 
 
 } # as_fn_mkdir_p
@@ -367,19 +375,19 @@ else
 fi # as_fn_arith
 
 
-# as_fn_error ERROR [LINENO LOG_FD]
-# ---------------------------------
+# as_fn_error STATUS ERROR [LINENO LOG_FD]
+# ----------------------------------------
 # Output "`basename $0`: error: ERROR" to stderr. If LINENO and LOG_FD are
 # provided, also output the error to LOG_FD, referencing LINENO. Then exit the
-# script with status $?, using 1 if that was 0.
+# script with STATUS, using 1 if that was 0.
 as_fn_error ()
 {
-  as_status=$?; test $as_status -eq 0 && as_status=1
-  if test "$3"; then
-    as_lineno=${as_lineno-"$2"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-    $as_echo "$as_me:${as_lineno-$LINENO}: error: $1" >&$3
+  as_status=$1; test $as_status -eq 0 && as_status=1
+  if test "$4"; then
+    as_lineno=${as_lineno-"$3"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+    $as_echo "$as_me:${as_lineno-$LINENO}: error: $2" >&$4
   fi
-  $as_echo "$as_me: error: $1" >&2
+  $as_echo "$as_me: error: $2" >&2
   as_fn_exit $as_status
 } # as_fn_error
 
@@ -577,6 +585,8 @@ at_list_p=false
 at_clean=false
 # Test groups to run
 at_groups=
+# Whether to rerun failed tests.
+at_recheck=
 # Whether a write failure occurred
 at_write_fail=0
 
@@ -590,21 +600,23 @@ esac
 # Whether -C is in effect.
 at_change_dir=false
 
+# Whether to enable colored test results.
+at_color=no
 # List of the tested programs.
 at_tested='opendfs'
-# List of the all the test groups.
-at_groups_all=' 1 2 3 4 5'
 # As many question marks as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
 at_format='?'
 # Description of all the test groups.
-at_help_all="1;general.at:48;sinc: create file;sinc;
-2;general.at:63;sinc: create directory;sinc;
-3;general.at:75;sinc: modify file;sinc;
-4;general.at:91;sinc: delete file;sinc;
-5;general.at:109;sinc: modify with conflict;sinc;
+at_help_all="1;general.at:54;sinc: create file;sinc;
+2;general.at:69;sinc: create directory;sinc;
+3;general.at:81;sinc: modify file;sinc;
+4;general.at:97;sinc: delete file;sinc;
+5;general.at:115;sinc: modify with conflict;sinc;
 "
+# List of the all the test groups.
+at_groups_all=`$as_echo "$at_help_all" | sed 's/;.*//'`
 
 # at_fn_validate_ranges NAME...
 # -----------------------------
@@ -640,8 +652,8 @@ do
   fi
 
   case $at_option in
-  *=*) at_optarg=`expr "x$at_option" : 'x[^=]*=\(.*\)'` ;;
-  *)   at_optarg= ;;
+  *=?*) at_optarg=`expr "X$at_option" : '[^=]*=\(.*\)'` ;;
+  *)    at_optarg= ;;
   esac
 
   # Accept the important Cygnus configure options, so we can diagnose typos.
@@ -661,6 +673,19 @@ do
 
     --clean | -c )
 	at_clean=:
+	;;
+
+    --color )
+	at_color=always
+	;;
+    --color=* )
+	case $at_optarg in
+	no | never | none) at_color=never ;;
+	auto | tty | if-tty) at_color=auto ;;
+	always | yes | force) at_color=always ;;
+	*) at_optname=`echo " $at_option" | sed 's/^ //; s/=.*//'`
+	   as_fn_error $? "unrecognized argument to $at_optname: $at_optarg" ;;
+	esac
 	;;
 
     --debug | -d )
@@ -684,24 +709,24 @@ do
 
     [0-9] | [0-9][0-9] | [0-9][0-9][0-9] | [0-9][0-9][0-9][0-9])
 	at_fn_validate_ranges at_option
-	as_fn_append at_groups "$at_option "
+	as_fn_append at_groups "$at_option$as_nl"
 	;;
 
     # Ranges
     [0-9]- | [0-9][0-9]- | [0-9][0-9][0-9]- | [0-9][0-9][0-9][0-9]-)
 	at_range_start=`echo $at_option |tr -d X-`
 	at_fn_validate_ranges at_range_start
-	at_range=`$as_echo " $at_groups_all " | \
-	  sed -e 's/^.* \('$at_range_start' \)/\1/'`
-	as_fn_append at_groups "$at_range "
+	at_range=`$as_echo "$at_groups_all" | \
+	  sed -ne '/^'$at_range_start'$/,$p'`
+	as_fn_append at_groups "$at_range$as_nl"
 	;;
 
     -[0-9] | -[0-9][0-9] | -[0-9][0-9][0-9] | -[0-9][0-9][0-9][0-9])
 	at_range_end=`echo $at_option |tr -d X-`
 	at_fn_validate_ranges at_range_end
-	at_range=`$as_echo " $at_groups_all " | \
-	  sed -e 's/\( '$at_range_end'\) .*$/\1/'`
-	as_fn_append at_groups "$at_range "
+	at_range=`$as_echo "$at_groups_all" | \
+	  sed -ne '1,/^'$at_range_end'$/p'`
+	as_fn_append at_groups "$at_range$as_nl"
 	;;
 
     [0-9]-[0-9] | [0-9]-[0-9][0-9] | [0-9]-[0-9][0-9][0-9] | \
@@ -718,10 +743,9 @@ do
 	  at_range_start=$at_tmp
 	fi
 	at_fn_validate_ranges at_range_start at_range_end
-	at_range=`$as_echo " $at_groups_all " | \
-	  sed -e 's/^.*\( '$at_range_start' \)/\1/' \
-	      -e 's/\( '$at_range_end'\) .*$/\1/'`
-	as_fn_append at_groups "$at_range "
+	at_range=`$as_echo "$at_groups_all" | \
+	  sed -ne '/^'$at_range_start'$/,/^'$at_range_end'$/p'`
+	as_fn_append at_groups "$at_range$as_nl"
 	;;
 
     # Directory selection.
@@ -731,6 +755,9 @@ do
     --directory=* )
 	at_change_dir=:
 	at_dir=$at_optarg
+	if test x- = "x$at_dir" ; then
+	  at_dir=./-
+	fi
 	;;
 
     # Parallel execution.
@@ -745,7 +772,7 @@ do
 	fi
 	case $at_jobs in *[!0-9]*)
 	  at_optname=`echo " $at_option" | sed 's/^ //; s/[0-9=].*//'`
-	  as_fn_error "non-numeric argument to $at_optname: $at_jobs" ;;
+	  as_fn_error $? "non-numeric argument to $at_optname: $at_jobs" ;;
 	esac
 	;;
 
@@ -773,11 +800,12 @@ do
 	  at_groups_selected=`$as_echo "$at_groups_selected" |
 	      grep -i $at_invert "^[1-9][^;]*;.*[; ]$at_keyword[ ;]"`
 	done
-	# Smash the newlines.
-	at_groups_selected=`$as_echo "$at_groups_selected" | sed 's/;.*//' |
-	  tr "$as_nl" ' '
-	`
-	as_fn_append at_groups "$at_groups_selected "
+	# Smash the keywords.
+	at_groups_selected=`$as_echo "$at_groups_selected" | sed 's/;.*//'`
+	as_fn_append at_groups "$at_groups_selected$as_nl"
+	;;
+    --recheck)
+	at_recheck=:
 	;;
 
     *=*)
@@ -785,7 +813,7 @@ do
 	# Reject names that are not valid shell variable names.
 	case $at_envvar in
 	  '' | [0-9]* | *[!_$as_cr_alnum]* )
-	    as_fn_error "invalid variable name: \`$at_envvar'" ;;
+	    as_fn_error $? "invalid variable name: \`$at_envvar'" ;;
 	esac
 	at_value=`$as_echo "$at_optarg" | sed "s/'/'\\\\\\\\''/g"`
 	# Export now, but save eval for later and for debug scripts.
@@ -802,15 +830,41 @@ done
 
 # Verify our last option didn't require an argument
 if test -n "$at_prev"; then :
-  as_fn_error "\`$at_prev' requires an argument."
+  as_fn_error $? "\`$at_prev' requires an argument"
 fi
 
+# The file containing the suite.
+at_suite_log=$at_dir/$as_me.log
+
 # Selected test groups.
-if test -z "$at_groups"; then
+if test -z "$at_groups$at_recheck"; then
   at_groups=$at_groups_all
 else
+  if test -n "$at_recheck" && test -r "$at_suite_log"; then
+    at_oldfails=`sed -n '
+      /^Failed tests:$/,/^Skipped tests:$/{
+	s/^[ ]*\([1-9][0-9]*\):.*/\1/p
+      }
+      /^Unexpected passes:$/,/^## Detailed failed tests/{
+	s/^[ ]*\([1-9][0-9]*\):.*/\1/p
+      }
+      /^## Detailed failed tests/q
+      ' "$at_suite_log"`
+    as_fn_append at_groups "$at_oldfails$as_nl"
+  fi
   # Sort the tests, removing duplicates.
-  at_groups=`$as_echo "$at_groups" | tr ' ' "$as_nl" | sort -nu`
+  at_groups=`$as_echo "$at_groups" | sort -nu | sed '/^$/d'`
+fi
+
+if test x"$at_color" = xalways \
+   || { test x"$at_color" = xauto && test -t 1; }; then
+  at_red=`printf '\033[0;31m'`
+  at_grn=`printf '\033[0;32m'`
+  at_lgn=`printf '\033[1;32m'`
+  at_blu=`printf '\033[1;34m'`
+  at_std=`printf '\033[m'`
+else
+  at_red= at_grn= at_lgn= at_blu= at_std=
 fi
 
 # Help message.
@@ -846,11 +900,14 @@ cat <<_ATEOF || at_write_fail=1
 Execution tuning:
   -C, --directory=DIR
                  change to directory DIR before starting
+      --color[=never|auto|always]
+                 enable colored test results on terminal, or always
   -j, --jobs[=N]
                  Allow N jobs at once; infinite jobs with no arg (default 1)
   -k, --keywords=KEYWORDS
                  select the tests matching all the comma-separated KEYWORDS
                  multiple \`-k' accumulate; prefixed \`!' negates a KEYWORD
+      --recheck  select all tests that failed or passed unexpectedly last time
   -e, --errexit  abort as soon as a test fails; implies --debug
   -v, --verbose  force more detailed output
                  default for debugging scripts
@@ -874,21 +931,13 @@ prueba3 1.0 test suite test groups:
       KEYWORDS
 
 _ATEOF
-  # Passing at_groups is tricky.  We cannot use it to form a literal string
-  # or regexp because of the limitation of AIX awk.  And Solaris' awk
-  # doesn't grok more than 99 fields in a record, so we have to use `split'.
-  # at_groups needs to be space-separated for this script to work.
-  case $at_groups in
-    *"$as_nl"* )
-      at_groups=`$as_echo "$at_groups" | tr "$as_nl" ' '` ;;
-  esac
-  $as_echo "$at_groups$as_nl$at_help_all" |
-    awk 'BEGIN { FS = ";" }
-	 NR == 1 {
-	   for (n = split ($ 0, a, " "); n; n--)
-	     selected[a[n]] = 1
+  # Pass an empty line as separator between selected groups and help.
+  $as_echo "$at_groups$as_nl$as_nl$at_help_all" |
+    awk 'NF == 1 && FS != ";" {
+	   selected[$ 1] = 1
 	   next
 	 }
+	 /^$/ { FS = ";" }
 	 NF > 0 {
 	   if (selected[$ 1]) {
 	     printf " %3d: %-18s %s\n", $ 1, $ 2, $ 3
@@ -936,29 +985,25 @@ Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 Author: Fernando Rincón <frm.rincon@gmail.com>
 
-Copyright (C) 2009 Free Software Foundation, Inc.
+Copyright (C) 2010 Free Software Foundation, Inc.
 This test suite is free software; the Free Software Foundation gives
 unlimited permission to copy, distribute and modify it.
 _ATEOF
   exit $at_write_fail
 fi
 
-# Should we print banners?  at_groups is space-separated for entire test,
-# newline-separated if only a subset of the testsuite is run.
-case $at_groups in
-  *' '*' '* | *"$as_nl"*"$as_nl"* )
-      at_print_banners=: ;;
+# Should we print banners?  Yes if more than one test is run.
+case $at_groups in #(
+  *$as_nl* )
+      at_print_banners=: ;; #(
   * ) at_print_banners=false ;;
 esac
-# Text for banner N, set to empty once printed.
+# Text for banner N, set to a single space once printed.
 
 # Take any -C into account.
 if $at_change_dir ; then
-  if test x- = "x$at_dir" ; then
-    at_dir=./-
-  fi
   test x != "x$at_dir" && cd "$at_dir" \
-    || as_fn_error "unable to change directory"
+    || as_fn_error $? "unable to change directory"
   at_dir=`pwd`
 fi
 
@@ -966,11 +1011,11 @@ fi
 for at_file in atconfig atlocal
 do
   test -r $at_file || continue
-  . ./$at_file || as_fn_error "invalid content: $at_file"
+  . ./$at_file || as_fn_error $? "invalid content: $at_file"
 done
 
 # Autoconf <=2.59b set at_top_builddir instead of at_top_build_prefix:
-: ${at_top_build_prefix=$at_top_builddir}
+: "${at_top_build_prefix=$at_top_builddir}"
 
 # Perform any assignments requested during argument parsing.
 eval "$at_debug_args"
@@ -1023,7 +1068,7 @@ fi
 # The directory the whole suite works in.
 # Should be absolute to let the user `cd' at will.
 at_suite_dir=$at_dir/$as_me.dir
-# The file containing the suite.
+# The file containing the suite ($at_dir might have changed since earlier).
 at_suite_log=$at_dir/$as_me.log
 # The directory containing helper files per test group.
 at_helper_dir=$at_suite_dir/at-groups
@@ -1103,6 +1148,7 @@ export PATH
 # Setting up the FDs.
 
 
+
 # 5 is the log file.  Not to be overwritten if `-d'.
 if $at_debug_p; then
   at_suite_log=/dev/null
@@ -1112,43 +1158,28 @@ fi
 exec 5>>"$at_suite_log"
 
 # Banners and logs.
-cat <<\_ASBOX
-## ----------------------- ##
+$as_echo "## ----------------------- ##
 ## prueba3 1.0 test suite. ##
-## ----------------------- ##
-_ASBOX
+## ----------------------- ##"
 {
-  cat <<\_ASBOX
-## ----------------------- ##
+  $as_echo "## ----------------------- ##
 ## prueba3 1.0 test suite. ##
-## ----------------------- ##
-_ASBOX
+## ----------------------- ##"
   echo
 
   $as_echo "$as_me: command line was:"
   $as_echo "  \$ $0 $at_cli_args"
   echo
 
-  # Try to find a few ChangeLogs in case it might help determining the
-  # exact version.  Use the relative dir: if the top dir is a symlink,
-  # find will not follow it (and options to follow the links are not
-  # portable), which would result in no output here.  Prune directories
-  # matching the package tarname, since they tend to be leftovers from
-  # `make dist' or `make distcheck' and contain redundant or stale logs.
-  if test -n "$at_top_srcdir"; then
-    cat <<\_ASBOX
-## ----------- ##
-## ChangeLogs. ##
-## ----------- ##
-_ASBOX
+  # If ChangeLog exists, list a few lines in case it might help determining
+  # the exact version.
+  if test -n "$at_top_srcdir" && test -f "$at_top_srcdir/ChangeLog"; then
+    $as_echo "## ---------- ##
+## ChangeLog. ##
+## ---------- ##"
     echo
-    for at_file in `find "$at_top_srcdir" -name "prueba3-*" -prune -o -name ChangeLog -print`
-    do
-      $as_echo "$as_me: $at_file:"
-      sed 's/^/| /;10q' $at_file
-      echo
-    done
-
+    sed 's/^/| /;10q' "$at_top_srcdir/ChangeLog"
+    echo
   fi
 
   {
@@ -1211,9 +1242,13 @@ at_fn_banner ()
 {
   $at_print_banners || return 0
   eval at_banner_text=\$at_banner_text_$1
-  test "x$at_banner_text" = x && return 0
-  eval at_banner_text_$1=
-  $as_echo "$as_nl$at_banner_text$as_nl"
+  test "x$at_banner_text" = "x " && return 0
+  eval "at_banner_text_$1=\" \""
+  if test -z "$at_banner_text"; then
+    $at_first || echo
+  else
+    $as_echo "$as_nl$at_banner_text$as_nl"
+  fi
 } # at_fn_banner
 
 # at_fn_check_prepare_notrace REASON LINE
@@ -1347,11 +1382,9 @@ at_fn_create_debugging_script ()
 ## End of autotest shell functions. ##
 ## -------------------------------- ##
 {
-  cat <<\_ASBOX
-## ---------------- ##
+  $as_echo "## ---------------- ##
 ## Tested programs. ##
-## ---------------- ##
-_ASBOX
+## ---------------- ##"
   echo
 } >&5
 
@@ -1380,16 +1413,14 @@ IFS=$as_save_IFS
       echo
     } >&5 2>&1
   else
-    as_fn_error "cannot find $at_program" "$LINENO" 5
+    as_fn_error $? "cannot find $at_program" "$LINENO" 5
   fi
 done
 
 {
-  cat <<\_ASBOX
-## ------------------ ##
+  $as_echo "## ------------------ ##
 ## Running the tests. ##
-## ------------------ ##
-_ASBOX
+## ------------------ ##"
 } >&5
 
 at_start_date=`date`
@@ -1398,7 +1429,7 @@ $as_echo "$as_me: starting at: $at_start_date" >&5
 
 # Create the master directory if it doesn't already exist.
 as_dir="$at_suite_dir"; as_fn_mkdir_p ||
-  as_fn_error "cannot create \`$at_suite_dir'" "$LINENO" 5
+  as_fn_error $? "cannot create \`$at_suite_dir'" "$LINENO" 5
 
 # Can we diff with `/dev/null'?  DU 5.0 refuses.
 if diff /dev/null /dev/null >/dev/null 2>&1; then
@@ -1432,7 +1463,7 @@ BEGIN { FS="" }
   if (test == "'"$at_group"'") exit
 }' "$at_myself" > "$at_suite_dir/at-source-lines" &&
 . "$at_suite_dir/at-source-lines" ||
-  as_fn_error "cannot create test line number cache" "$LINENO" 5
+  as_fn_error $? "cannot create test line number cache" "$LINENO" 5
 rm -f "$at_suite_dir/at-source-lines"
 
 # Set number of jobs for `-j'; avoid more jobs than test groups.
@@ -1456,7 +1487,7 @@ rm -rf "$at_helper_dir" &&
 mkdir "$at_helper_dir" &&
 cd "$at_helper_dir" &&
 { test -z "$at_groups" || mkdir $at_groups; } ||
-as_fn_error "testsuite directory setup failed" "$LINENO" 5
+as_fn_error $? "testsuite directory setup failed" "$LINENO" 5
 
 # Functions for running a test group.  We leave the actual
 # test group execution outside of a shell function in order
@@ -1464,7 +1495,7 @@ as_fn_error "testsuite directory setup failed" "$LINENO" 5
 
 # at_fn_group_prepare
 # -------------------
-# Prepare running a test group.
+# Prepare for running a test group.
 at_fn_group_prepare ()
 {
   # The directory for additional per-group helper files.
@@ -1509,8 +1540,8 @@ at_fn_group_prepare ()
   find "$at_group_dir" -type d ! -perm -700 -exec chmod u+rwx {} \;
   rm -fr "$at_group_dir"/* "$at_group_dir"/.[!.] "$at_group_dir"/.??*
 fi ||
-    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: test directory for $at_group_normalized could not be cleaned." >&5
-$as_echo "$as_me: WARNING: test directory for $at_group_normalized could not be cleaned." >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: test directory for $at_group_normalized could not be cleaned" >&5
+$as_echo "$as_me: WARNING: test directory for $at_group_normalized could not be cleaned" >&2;}
   # Be tolerant if the above `rm' was not able to remove the directory.
   as_dir="$at_group_dir"; as_fn_mkdir_p
 
@@ -1523,6 +1554,25 @@ $as_echo "$as_me: WARNING: test directory for $at_group_normalized could not be 
   else
     at_tee_pipe='cat >> "$at_group_log"'
   fi
+}
+
+# at_fn_group_banner ORDINAL LINE DESC PAD [BANNER]
+# -------------------------------------------------
+# Declare the test group ORDINAL, located at LINE with group description DESC,
+# and residing under BANNER. Use PAD to align the status column.
+at_fn_group_banner ()
+{
+  at_setup_line="$2"
+  test -n "$5" && at_fn_banner $5
+  at_desc="$3"
+  case $1 in
+    [0-9])      at_desc_line="  $1: ";;
+    [0-9][0-9]) at_desc_line=" $1: " ;;
+    *)          at_desc_line="$1: "  ;;
+  esac
+  as_fn_append at_desc_line "$3$4"
+  $at_quiet $as_echo_n "$at_desc_line"
+  echo "#                             -*- compilation -*-" >> "$at_group_log"
 }
 
 # at_fn_group_postprocess
@@ -1546,44 +1596,44 @@ _ATEOF
   $at_verbose $as_echo_n "$at_group. $at_setup_line: "
   $as_echo_n "$at_group. $at_setup_line: " >> "$at_group_log"
   case $at_xfail:$at_status in
-    *:99)
-	at_msg='FAILED ('`cat "$at_check_line_file"`')'
-	at_res=fail
-	at_errexit=$at_errexit_p
-	;;
     yes:0)
 	at_msg="UNEXPECTED PASS"
 	at_res=xpass
 	at_errexit=$at_errexit_p
+	at_color=$at_red
 	;;
     no:0)
 	at_msg="ok"
 	at_res=pass
 	at_errexit=false
+	at_color=$at_grn
 	;;
     *:77)
 	at_msg='skipped ('`cat "$at_check_line_file"`')'
 	at_res=skip
 	at_errexit=false
+	at_color=$at_blu
+	;;
+    no:* | *:99)
+	at_msg='FAILED ('`cat "$at_check_line_file"`')'
+	at_res=fail
+	at_errexit=$at_errexit_p
+	at_color=$at_red
 	;;
     yes:*)
 	at_msg='expected failure ('`cat "$at_check_line_file"`')'
 	at_res=xfail
 	at_errexit=false
-	;;
-    no:*)
-	at_msg='FAILED ('`cat "$at_check_line_file"`')'
-	at_res=fail
-	at_errexit=$at_errexit_p
+	at_color=$at_lgn
 	;;
   esac
   echo "$at_res" > "$at_job_dir/$at_res"
   # In parallel mode, output the summary line only afterwards.
   if test $at_jobs -ne 1 && test -n "$at_verbose"; then
-    $as_echo "$at_desc_line $at_msg"
+    $as_echo "$at_desc_line $at_color$at_msg$at_std"
   else
     # Make sure there is a separator even with long titles.
-    $as_echo " $at_msg"
+    $as_echo " $at_color$at_msg$at_std"
   fi
   at_log_msg="$at_group. $at_desc ($at_setup_line): $at_msg"
   case $at_status in
@@ -1599,9 +1649,13 @@ _ATEOF
       $as_echo "$at_log_msg" >> "$at_group_log"
       $as_echo "$at_log_msg" >&5
 
-      # Cleanup the group directory, unless the user wants the files.
-      if $at_debug_p; then
+      # Cleanup the group directory, unless the user wants the files
+      # or the success was unexpected.
+      if $at_debug_p || test $at_res = xpass; then
 	at_fn_create_debugging_script
+	if test $at_res = xpass && $at_errexit; then
+	  echo stop > "$at_stop_file"
+	fi
       else
 	if test -d "$at_group_dir"; then
 	  find "$at_group_dir" -type d ! -perm -700 -exec chmod u+rwx \{\} \;
@@ -1687,8 +1741,7 @@ then
 
   echo
   # Turn jobs into a list of numbers, starting from 1.
-  at_joblist=`$as_echo " $at_groups_all " | \
-    sed 's/\( '$at_jobs'\) .*/\1/'`
+  at_joblist=`$as_echo "$at_groups" | sed -n 1,${at_jobs}p`
 
   set X $at_joblist
   shift
@@ -1697,28 +1750,32 @@ then
     (
       # Start one test group.
       $at_job_control_off
-      exec 6>"$at_job_fifo"
+      if $at_first; then
+	exec 7>"$at_job_fifo"
+      else
+	exec 6<&-
+      fi
       trap 'set +x; set +e
 	    trap "" PIPE
 	    echo stop > "$at_stop_file"
-	    echo token >&6
+	    echo >&7
 	    as_fn_exit 141' PIPE
       at_fn_group_prepare
       if cd "$at_group_dir" &&
 	 at_fn_test $at_group &&
-	 . "$at_test_source" # AT_JOB_FIFO_FD>&-
+	 . "$at_test_source"
       then :; else
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: unable to parse test group: $at_group" >&5
 $as_echo "$as_me: WARNING: unable to parse test group: $at_group" >&2;}
 	at_failed=:
       fi
       at_fn_group_postprocess
-      echo token >&6
+      echo >&7
     ) &
     $at_job_control_off
     if $at_first; then
       at_first=false
-      exec 6<"$at_job_fifo"
+      exec 6<"$at_job_fifo" 7>"$at_job_fifo"
     fi
     shift # Consume one token.
     if test $# -gt 0; then :; else
@@ -1727,6 +1784,7 @@ $as_echo "$as_me: WARNING: unable to parse test group: $at_group" >&2;}
     fi
     test -f "$at_stop_file" && break
   done
+  exec 7>&-
   # Read back the remaining ($at_jobs - 1) tokens.
   set X $at_joblist
   shift
@@ -1800,19 +1858,15 @@ case $at_start_time,$at_stop_time in
 esac
 
 echo
-cat <<\_ASBOX
-## ------------- ##
+$as_echo "## ------------- ##
 ## Test results. ##
-## ------------- ##
-_ASBOX
+## ------------- ##"
 echo
 {
   echo
-  cat <<\_ASBOX
-## ------------- ##
+  $as_echo "## ------------- ##
 ## Test results. ##
-## ------------- ##
-_ASBOX
+## ------------- ##"
   echo
 } >&5
 
@@ -1830,12 +1884,14 @@ if $at_errexit_p && test $at_unexpected_count != 0; then
     at_result="$at_result $at_were run, one failed"
   fi
   at_result="$at_result unexpectedly and inhibited subsequent tests."
+  at_color=$at_red
 else
   # Don't you just love exponential explosion of the number of cases?
+  at_color=$at_red
   case $at_xpass_count:$at_fail_count:$at_xfail_count in
     # So far, so good.
-    0:0:0) at_result="$at_result $at_were successful." ;;
-    0:0:*) at_result="$at_result behaved as expected." ;;
+    0:0:0) at_result="$at_result $at_were successful." at_color=$at_grn ;;
+    0:0:*) at_result="$at_result behaved as expected." at_color=$at_lgn ;;
 
     # Some unexpected failures
     0:*:0) at_result="$at_result $at_were run,
@@ -1881,18 +1937,16 @@ $at_skip_count tests were skipped." ;;
 esac
 
 if test $at_unexpected_count = 0; then
-  echo "$at_result"
+  echo "$at_color$at_result$at_std"
   echo "$at_result" >&5
 else
-  echo "ERROR: $at_result" >&2
+  echo "${at_color}ERROR: $at_result$at_std" >&2
   echo "ERROR: $at_result" >&5
   {
     echo
-    cat <<\_ASBOX
-## ------------------------ ##
+    $as_echo "## ------------------------ ##
 ## Summary of the failures. ##
-## ------------------------ ##
-_ASBOX
+## ------------------------ ##"
 
     # Summary of failed and skipped tests.
     if test $at_fail_count != 0; then
@@ -1911,11 +1965,9 @@ _ASBOX
       echo
     fi
     if test $at_fail_count != 0; then
-      cat <<\_ASBOX
-## ---------------------- ##
+      $as_echo "## ---------------------- ##
 ## Detailed failed tests. ##
-## ---------------------- ##
-_ASBOX
+## ---------------------- ##"
       echo
       for at_group in $at_fail_list
       do
@@ -1970,15 +2022,11 @@ exit 0
 ## Actual tests. ##
 ## ------------- ##
 #AT_START_1
-# 1. general.at:48: sinc: create file
-at_setup_line='general.at:48'
-at_desc="sinc: create file"
-at_desc_line="  1: $at_desc                              "
-$at_quiet $as_echo_n "$at_desc_line"
+at_fn_group_banner 1 'general.at:54' \
+  "sinc: create file" "                              "
 at_xfail=no
-echo "#                             -*- compilation -*-" >> "$at_group_log"
 (
-  $as_echo "1. general.at:48: testing ..."
+  $as_echo "1. $at_setup_line: testing $at_desc ..."
   $at_traceon
 
 
@@ -1997,7 +2045,13 @@ mkdir database
 declare -i PUERTO1
 declare -i PUERTO2
 PUERTO1=($RANDOM*5000/32768)+5000
-PUERTO2=PUERTO1+1
+while  "`netstat -an | grep $PUERTO1`" != "" ; do
+        PUERTO1=($RANDOM*5000/32768)+5000
+done
+PUERTO2=($RANDOM*5000/32768)+5000
+while  "`netstat -an | grep $PUERTO2`" != "" ; do
+        PUERTO2=($RANDOM*5000/32768)+5000
+done
 opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
 opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
 sleep 2
@@ -2012,33 +2066,29 @@ sleep 1
 
 
 { set +x
-$as_echo "$at_srcdir/general.at:59: diff testdir/1/hosts testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:59"
+$as_echo "$at_srcdir/general.at:65: diff testdir/1/hosts testdir/2/hosts"
+at_fn_check_prepare_trace "general.at:65"
 ( $at_check_trace; diff testdir/1/hosts testdir/2/hosts
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:59"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:65"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
   set +x
   $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 | eval $at_tee_pipe
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
 #AT_STOP_1
 #AT_START_2
-# 2. general.at:63: sinc: create directory
-at_setup_line='general.at:63'
-at_desc="sinc: create directory"
-at_desc_line="  2: $at_desc                         "
-$at_quiet $as_echo_n "$at_desc_line"
+at_fn_group_banner 2 'general.at:69' \
+  "sinc: create directory" "                         "
 at_xfail=no
-echo "#                             -*- compilation -*-" >> "$at_group_log"
 (
-  $as_echo "2. general.at:63: testing ..."
+  $as_echo "2. $at_setup_line: testing $at_desc ..."
   $at_traceon
 
 
@@ -2056,7 +2106,13 @@ mkdir database
 declare -i PUERTO1
 declare -i PUERTO2
 PUERTO1=($RANDOM*5000/32768)+5000
-PUERTO2=PUERTO1+1
+while  "`netstat -an | grep $PUERTO1`" != "" ; do
+        PUERTO1=($RANDOM*5000/32768)+5000
+done
+PUERTO2=($RANDOM*5000/32768)+5000
+while  "`netstat -an | grep $PUERTO2`" != "" ; do
+        PUERTO2=($RANDOM*5000/32768)+5000
+done
 opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
 opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
 sleep 2
@@ -2070,33 +2126,29 @@ pkill opendfs
 sleep 1
 
 { set +x
-$as_echo "$at_srcdir/general.at:72: test -d testdir/2/prueba"
-at_fn_check_prepare_trace "general.at:72"
+$as_echo "$at_srcdir/general.at:78: test -d testdir/2/prueba"
+at_fn_check_prepare_trace "general.at:78"
 ( $at_check_trace; test -d testdir/2/prueba
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:72"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:78"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
   set +x
   $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 | eval $at_tee_pipe
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
 #AT_STOP_2
 #AT_START_3
-# 3. general.at:75: sinc: modify file
-at_setup_line='general.at:75'
-at_desc="sinc: modify file"
-at_desc_line="  3: $at_desc                              "
-$at_quiet $as_echo_n "$at_desc_line"
+at_fn_group_banner 3 'general.at:81' \
+  "sinc: modify file" "                              "
 at_xfail=no
-echo "#                             -*- compilation -*-" >> "$at_group_log"
 (
-  $as_echo "3. general.at:75: testing ..."
+  $as_echo "3. $at_setup_line: testing $at_desc ..."
   $at_traceon
 
 
@@ -2116,7 +2168,13 @@ cp /etc/hosts testdir/2
 declare -i PUERTO1
 declare -i PUERTO2
 PUERTO1=($RANDOM*5000/32768)+5000
-PUERTO2=PUERTO1+1
+while  "`netstat -an | grep $PUERTO1`" != "" ; do
+        PUERTO1=($RANDOM*5000/32768)+5000
+done
+PUERTO2=($RANDOM*5000/32768)+5000
+while  "`netstat -an | grep $PUERTO2`" != "" ; do
+        PUERTO2=($RANDOM*5000/32768)+5000
+done
 opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
 opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
 sleep 2
@@ -2130,33 +2188,29 @@ pkill opendfs
 sleep 1
 
 { set +x
-$as_echo "$at_srcdir/general.at:86: diff testdir/1/hosts testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:86"
+$as_echo "$at_srcdir/general.at:92: diff testdir/1/hosts testdir/2/hosts"
+at_fn_check_prepare_trace "general.at:92"
 ( $at_check_trace; diff testdir/1/hosts testdir/2/hosts
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:86"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:92"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
   set +x
   $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 | eval $at_tee_pipe
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
 #AT_STOP_3
 #AT_START_4
-# 4. general.at:91: sinc: delete file
-at_setup_line='general.at:91'
-at_desc="sinc: delete file"
-at_desc_line="  4: $at_desc                              "
-$at_quiet $as_echo_n "$at_desc_line"
+at_fn_group_banner 4 'general.at:97' \
+  "sinc: delete file" "                              "
 at_xfail=no
-echo "#                             -*- compilation -*-" >> "$at_group_log"
 (
-  $as_echo "4. general.at:91: testing ..."
+  $as_echo "4. $at_setup_line: testing $at_desc ..."
   $at_traceon
 
 
@@ -2176,7 +2230,13 @@ cp /etc/hosts testdir/2
 declare -i PUERTO1
 declare -i PUERTO2
 PUERTO1=($RANDOM*5000/32768)+5000
-PUERTO2=PUERTO1+1
+while  "`netstat -an | grep $PUERTO1`" != "" ; do
+        PUERTO1=($RANDOM*5000/32768)+5000
+done
+PUERTO2=($RANDOM*5000/32768)+5000
+while  "`netstat -an | grep $PUERTO2`" != "" ; do
+        PUERTO2=($RANDOM*5000/32768)+5000
+done
 opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
 opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
 sleep 2
@@ -2190,46 +2250,42 @@ pkill opendfs
 sleep 1
 
 { set +x
-$as_echo "$at_srcdir/general.at:102: test -e  testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:102"
+$as_echo "$at_srcdir/general.at:108: test -e  testdir/2/hosts"
+at_fn_check_prepare_trace "general.at:108"
 ( $at_check_trace; test -e  testdir/2/hosts
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 1 $at_status "$at_srcdir/general.at:102"
+at_fn_check_status 1 $at_status "$at_srcdir/general.at:108"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
 { set +x
-$as_echo "$at_srcdir/general.at:103: test -e  testdir/2/.conflicts/*hosts*"
-at_fn_check_prepare_trace "general.at:103"
+$as_echo "$at_srcdir/general.at:109: test -e  testdir/2/.conflicts/*hosts*"
+at_fn_check_prepare_trace "general.at:109"
 ( $at_check_trace; test -e  testdir/2/.conflicts/*hosts*
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:103"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:109"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
   set +x
   $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 | eval $at_tee_pipe
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
 #AT_STOP_4
 #AT_START_5
-# 5. general.at:109: sinc: modify with conflict
-at_setup_line='general.at:109'
-at_desc="sinc: modify with conflict"
-at_desc_line="  5: $at_desc                     "
-$at_quiet $as_echo_n "$at_desc_line"
+at_fn_group_banner 5 'general.at:115' \
+  "sinc: modify with conflict" "                     "
 at_xfail=no
-echo "#                             -*- compilation -*-" >> "$at_group_log"
 (
-  $as_echo "5. general.at:109: testing ..."
+  $as_echo "5. $at_setup_line: testing $at_desc ..."
   $at_traceon
 
 
@@ -2277,7 +2333,13 @@ sleep 1
 declare -i PUERTO1
 declare -i PUERTO2
 PUERTO1=($RANDOM*5000/32768)+5000
-PUERTO2=PUERTO1+1
+while  "`netstat -an | grep $PUERTO1`" != "" ; do
+        PUERTO1=($RANDOM*5000/32768)+5000
+done
+PUERTO2=($RANDOM*5000/32768)+5000
+while  "`netstat -an | grep $PUERTO2`" != "" ; do
+        PUERTO2=($RANDOM*5000/32768)+5000
+done
 opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
 opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
 sleep 2
@@ -2289,46 +2351,46 @@ sleep 1
 
 
 { set +x
-$as_echo "$at_srcdir/general.at:140: diff testdir/hosts.2 testdir/1/hosts"
-at_fn_check_prepare_trace "general.at:140"
+$as_echo "$at_srcdir/general.at:146: diff testdir/hosts.2 testdir/1/hosts"
+at_fn_check_prepare_trace "general.at:146"
 ( $at_check_trace; diff testdir/hosts.2 testdir/1/hosts
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:140"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:146"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
 { set +x
-$as_echo "$at_srcdir/general.at:141: diff testdir/hosts.2 testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:141"
+$as_echo "$at_srcdir/general.at:147: diff testdir/hosts.2 testdir/2/hosts"
+at_fn_check_prepare_trace "general.at:147"
 ( $at_check_trace; diff testdir/hosts.2 testdir/2/hosts
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:141"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:147"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
 { set +x
-$as_echo "$at_srcdir/general.at:142: diff testdir/hosts.1 testdir/1/.conflicts/*hosts*"
-at_fn_check_prepare_trace "general.at:142"
+$as_echo "$at_srcdir/general.at:148: diff testdir/hosts.1 testdir/1/.conflicts/*hosts*"
+at_fn_check_prepare_trace "general.at:148"
 ( $at_check_trace; diff testdir/hosts.1 testdir/1/.conflicts/*hosts*
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:142"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:148"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
   set +x
   $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 | eval $at_tee_pipe
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
 #AT_STOP_5
