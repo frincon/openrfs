@@ -47,8 +47,7 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_opendfs_OBJECTS = opendfs-opendfs.$(OBJEXT) \
-	opendfs-queue_sqlite.$(OBJEXT) \
-	opendfs-monitor_inotify.$(OBJEXT) opendfs-sender.$(OBJEXT) \
+	opendfs-queue_sqlite.$(OBJEXT) opendfs-sender.$(OBJEXT) \
 	opendfs-receiver.$(OBJEXT) opendfs-executer.$(OBJEXT) \
 	opendfs-server.$(OBJEXT) opendfs-client.$(OBJEXT) \
 	opendfs-utils.$(OBJEXT)
@@ -160,7 +159,7 @@ conflicts = .conflicts
 opendfs_conf = $(sysconfdir)/opendfs.conf
 COMMON_CPPFLAGS = -DDBFILE='"$(dbfile)"' -DLOCALEDIR='"$(localedir)"' -DCONFLICTS='"$(conflicts)"' 
 CONF_CPPFLAGS = -DOPENDFS_CONF='"$(opendfs_conf)"'
-opendfs_SOURCES = opendfs.c queue_sqlite.c monitor_inotify.c sender.c receiver.c executer.c server.c client.c utils.c
+opendfs_SOURCES = opendfs.c queue_sqlite.c sender.c receiver.c executer.c server.c client.c utils.c
 opendfs_CPPFLAGS = $(COMMON_CPPFLAGS) $(CONF_CPPFLAGS)
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -261,7 +260,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-executer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-monitor_inotify.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-opendfs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-queue_sqlite.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-receiver.Po@am__quote@
@@ -310,20 +308,6 @@ opendfs-queue_sqlite.obj: queue_sqlite.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='queue_sqlite.c' object='opendfs-queue_sqlite.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-queue_sqlite.obj `if test -f 'queue_sqlite.c'; then $(CYGPATH_W) 'queue_sqlite.c'; else $(CYGPATH_W) '$(srcdir)/queue_sqlite.c'; fi`
-
-opendfs-monitor_inotify.o: monitor_inotify.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-monitor_inotify.o -MD -MP -MF $(DEPDIR)/opendfs-monitor_inotify.Tpo -c -o opendfs-monitor_inotify.o `test -f 'monitor_inotify.c' || echo '$(srcdir)/'`monitor_inotify.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-monitor_inotify.Tpo $(DEPDIR)/opendfs-monitor_inotify.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='monitor_inotify.c' object='opendfs-monitor_inotify.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-monitor_inotify.o `test -f 'monitor_inotify.c' || echo '$(srcdir)/'`monitor_inotify.c
-
-opendfs-monitor_inotify.obj: monitor_inotify.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-monitor_inotify.obj -MD -MP -MF $(DEPDIR)/opendfs-monitor_inotify.Tpo -c -o opendfs-monitor_inotify.obj `if test -f 'monitor_inotify.c'; then $(CYGPATH_W) 'monitor_inotify.c'; else $(CYGPATH_W) '$(srcdir)/monitor_inotify.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-monitor_inotify.Tpo $(DEPDIR)/opendfs-monitor_inotify.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='monitor_inotify.c' object='opendfs-monitor_inotify.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-monitor_inotify.obj `if test -f 'monitor_inotify.c'; then $(CYGPATH_W) 'monitor_inotify.c'; else $(CYGPATH_W) '$(srcdir)/monitor_inotify.c'; fi`
 
 opendfs-sender.o: sender.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-sender.o -MD -MP -MF $(DEPDIR)/opendfs-sender.Tpo -c -o opendfs-sender.o `test -f 'sender.c' || echo '$(srcdir)/'`sender.c

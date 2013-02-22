@@ -3719,11 +3719,6 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define _OPENDFS_MONITOR_FUSE 1
-_ACEOF
-
-
-cat >>confdefs.h <<_ACEOF
 #define FUSE_USE_VERSION 26
 _ACEOF
 
