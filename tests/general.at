@@ -41,14 +41,14 @@ while [ "`netstat -an | grep $PUERTO2`" != "" ]; do
 done
 opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
 opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
-sleep 2
+sleep 4
 ])
 
 
 m4_define([M_OPENDFS_FINISH],
 [
 pkill opendfs
-sleep 1
+sleep 2
 ])
 
 AT_SETUP([sinc: create file])
@@ -58,7 +58,7 @@ M_OPENDFS_PREPARE
 M_OPENDFS_MOUNT
 
 cp /etc/hosts mountdir/1
-sleep 4
+sleep 6
 
 M_OPENDFS_FINISH
 
@@ -72,7 +72,7 @@ M_OPENDFS_PREPARE
 M_OPENDFS_MOUNT
 
 mkdir mountdir/1/prueba
-sleep 4
+sleep 6
 
 M_OPENDFS_FINISH
 AT_CHECK([test -d testdir/2/prueba],0)
@@ -86,7 +86,7 @@ cp /etc/hosts testdir/2
 M_OPENDFS_MOUNT
 
 cat /etc/services >> mountdir/1/hosts
-sleep 10
+sleep 12
 
 M_OPENDFS_FINISH
 AT_CHECK([diff testdir/1/hosts testdir/2/hosts],0)
@@ -102,7 +102,7 @@ cp /etc/hosts testdir/2
 M_OPENDFS_MOUNT
 
 rm mountdir/1/hosts
-sleep 10
+sleep 12
 
 M_OPENDFS_FINISH
 AT_CHECK([test -e  testdir/2/hosts],1)
@@ -125,14 +125,14 @@ PUERTO2=PUERTO1+1
 
 ## Mount first folder
 opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-sleep 2
+sleep 6
 echo "ONE" >> mountdir/1/hosts
 cp mountdir/1/hosts testdir/hosts.1
 M_OPENDFS_FINISH
 
 ## Mount second folder
 opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
-sleep 2
+sleep 6
 echo "TWO" >> mountdir/2/hosts
 cp mountdir/2/hosts testdir/hosts.2
 M_OPENDFS_FINISH
@@ -140,7 +140,7 @@ M_OPENDFS_FINISH
 
 ## mount all
 M_OPENDFS_MOUNT
-sleep 10
+sleep 12
 M_OPENDFS_FINISH
 
 AT_CHECK([diff testdir/hosts.2 testdir/1/hosts],0)
