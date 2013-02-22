@@ -1,7 +1,7 @@
 language: c
 before_install:
  - sudo apt-get update -qq
- - sudo apt-get install -qq librsync-dev
+ - sudo apt-get install -qq librsync-dev libconfuse-dev libfuse-dev
 compiler:
   - gcc
 script: ./configure && make && make check
