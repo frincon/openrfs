@@ -784,7 +784,9 @@ main (int argc, char **argv)
   pthread_t sender_thread;
   pthread_t receiver_thread;
 
+#ifdef OPENDFS_RS_DEBUG
   rs_trace_set_level (RS_LOG_DEBUG);
+#endif
 
   struct fuse_args args = FUSE_ARGS_INIT (argc, argv);
   memset (&config, 0, sizeof (config));

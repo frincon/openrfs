@@ -70,13 +70,12 @@ _executer_read_buffer (int sock, void *buf, size_t size)
   size_t leido;
 
   leido = 0;
-  fprintf (stderr, "_executer_read_buffer: leyendo del buffer %i bytes...\n",
-	   size);
+  utils_trace ("Leyendo del buffer %i bytes...\n", size);
   do
     {
       size_t leido2;
       leido2 = read (sock, buf, size);
-      fprintf (stderr, "_executer_read_buffer: leido %i bytes...\n", leido2);
+      utils_trace ("Leido %i bytes...\n", leido2);
       if (leido2 == 0)
 	{
 	  return leido;
@@ -237,7 +236,7 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 
   buf2 = 0x0;
 
-  fprintf (stderr, "_executer_in_callback: leyendo del buffer...\n");
+  utils_trace ("Reading from buffer...");
   /* If not process anything, do nothing */
   if (buf->avail_in == executer->size)
     return RS_DONE;
@@ -246,21 +245,20 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
   if (buf->eof_in)
     return RS_DONE;
 
-  fprintf (stderr, "_executer_in_callback: Tenemos que leer...\n");
+  utils_trace ("I have to read...");
   //Primero copiamos si queda algo
   if (buf->avail_in > 0)
     {
       buf2 = malloc (buf->avail_in);
       memcpy (buf2, buf->next_in, buf->avail_in);
-      fprintf (stderr, "_executer_in_callback: Habia %i bytes...\n",
-	       buf->avail_in);
+      utils_trace ("There was %i bytes", buf->avail_in);
     }
 
   memset (executer->buf, 0x0, executer->size);
 
   if (executer->type == _EXECUTER_SOCKET)
     {
-      fprintf (stderr, "_executer_in_callback: Es un socket...\n");
+      utils_trace ("Is a socket");
       //Comprobamos que hay mas datos y los leemos
       leido =
 	_executer_read_buffer (executer->sock, &haymas, sizeof (haymas));
@@ -295,7 +293,7 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	      return RS_IO_ERROR;
 	    }
 
-	  utils_debug ("Readed %i bytes", leido);
+	  utils_trace ("Readed %i bytes", leido);
 
 	  while (size + buf->avail_in > executer->size)
 	    {
@@ -303,9 +301,8 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	      executer->size *= 2;
 	      free (executer->buf);
 	      executer->buf = malloc (executer->size);
-	      fprintf (stderr,
-		       "_executer_in_callback: Ampliando el buffer en total a %i bytes\n",
-		       executer->size);
+	      utils_trace ("Growing buffer to total %i bytes",
+			   executer->size);
 	    }
 
 	  if (buf->avail_in > 0)
@@ -323,7 +320,7 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	}
       else
 	{
-	  fprintf (stderr, "_executer_in_callback: NO HAY MAS...\n");
+	  utils_trace ("There aren't any more");
 	  // No hay mas, se envia el final
 	  if (buf->avail_in > 0)
 	    {
@@ -345,8 +342,7 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 			       executer->size - buf->avail_in);
       if (leido == 0)
 	{
-	  fprintf (stderr,
-		   "_executer_in_callback: Se ha alcanzado el final del fichero\n");
+	  utils_trace ("End of file reached");
 	  //No hay mas, se envia el final
 	  if (buf->avail_in > 0)
 	    {
@@ -360,9 +356,7 @@ _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 	}
       else if (leido > 0)
 	{
-	  fprintf (stderr,
-		   "_executer_in_callback: Se han leido %i bytes del fichero\n",
-		   leido);
+	  utils_trace ("%i bytes readed from file", leido);
 	  //Hay mas se envia
 	  if (buf->avail_in > 0)
 	    {
@@ -398,9 +392,8 @@ _executer_out_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 
   if (buf->avail_out < 20 || (buf->avail_in == 0 && buf->eof_in))
     {
-      fprintf (stderr,
-	       "_executer_out_callback: Enviando %i butes del buffer...\n",
-	       executer->size - buf->avail_out);
+      utils_trace ("Sending %i bytes from buffer ",
+		   executer->size - buf->avail_out);
       //Enviamos ya lo que hay
       if (executer->type == _EXECUTER_FILE)
 	{
@@ -445,6 +438,7 @@ _executer_create_temp (const char *realpath, char **temppath)
 
   stemp = malloc (strlen (realpath) + 1);
   strcpy (stemp, realpath);
+  utils_debug ("Creating temp file for real path '%s'", realpath);
 
   //wait for delta and patch in same time
   base = basename (stemp);
@@ -464,6 +458,8 @@ _executer_create_temp (const char *realpath, char **temppath)
 executer_result
 _executer_move_temp (executer_job_t * job)
 {
+  utils_debug ("Moving temporay file '%s' to '%s'", job->tempfile,
+	       job->realpath);
   if (job->exists_real)
     {
       int ret = unlink (job->realpath);
@@ -491,6 +487,7 @@ executer_result
 _executer_change_permission (executer_job_t * job)
 {
   struct stat *stat2;
+  utils_debug ("Changing permission to temp file '%s'", job->tempfile);
 
   //Change mode
   chmod (job->tempfile, job->file_stat->st_mode);
@@ -507,6 +504,8 @@ _executer_receive_stat (executer_job_t * job)
 {
   int leido;
   static struct stat stat2;
+
+  utils_debug ("Receiving stat data");
 
   leido = _executer_read_buffer (job->peer_sock, &stat2, sizeof (stat2));
   if (leido != sizeof (stat2))
@@ -531,6 +530,8 @@ _executer_recive_delta (executer_job_t * job)
   executer_rs inrs;
   executer_rs outrs;
   int result;
+
+  utils_debug ("Receving delta.");
 
   int tempfile = _executer_create_temp (job->realpath, &temppath);
   if (tempfile == 0)
@@ -604,6 +605,8 @@ _executer_send_signature (executer_job_t * job)
   executer_rs outrs;
   rs_buffers_t rsbuf;
 
+  utils_debug ("Sending signature");
+
   int openfile = open (job->realpath, O_RDONLY);
 
   inrs.sock = openfile;
@@ -647,6 +650,7 @@ _executer_copy_conflict (executer_job_t * job)
   char *target;
   char *command;
   int ret;
+
   if (job->copy_conflict)
     {
       // TODO optimizar el copiar, porque se puede realizar un enlace duro y luego al parchear deslinkar y mover
@@ -656,6 +660,8 @@ _executer_copy_conflict (executer_job_t * job)
 // Cojemos los path
       _executer_real_path (job->file, &source);
       _executer_conflict_path (job->file, &target);
+
+      utils_debug ("Copying conflicts file '%s' to '%s'", source, target);
 
       command =
 	malloc (strlen (copy_command) + strlen (source) + strlen (target) -
@@ -687,6 +693,8 @@ _executer_receive_file (executer_job_t * job)
   int operation;
   bool protocol_error = false;
   int tempfile;
+
+  utils_debug ("Receiving file data");
 
   tempfile = _executer_create_temp (job->realpath, &temppath);
   if (tempfile == 0)
@@ -777,6 +785,7 @@ _executer_check_exists (executer_job_t * job)
   bool *conflict;
   struct stat bufstat;
 
+  utils_debug ("Checking if file '%s' exists", job->realpath);
   exists = !lstat (job->realpath, &bufstat);
   if (exists)
     {
@@ -813,7 +822,8 @@ _executer_check_exists (executer_job_t * job)
 int
 _executer_send_revert (executer_job_t * job)
 {
-  utils_debug ("The file %s has operations after, send nothing operation.", job->realpath);
+  utils_debug ("The file %s has operations after, send nothing operation.",
+	       job->realpath);
   int operacion = _EXECUTER_REVERT;
   if (!_executer_send_buffer (job->peer_sock, &operacion, sizeof (int)))
     {
@@ -828,6 +838,8 @@ _executer_send_stat (executer_job_t * job)
 {
   struct stat stat2;
   int ret;
+
+  utils_debug ("Sending stat data");
 
   ret = lstat (job->realpath, &stat2);
   if (ret != 0)
@@ -858,6 +870,7 @@ _executer_send_delta (executer_job_t * job)
   rs_result result;
   rs_buffers_t rsbuf;
 
+  utils_debug ("Sending delta data");
   deltajob = rs_delta_begin (signature);
 
   _executer_real_path (job->file, &realpath);
@@ -916,6 +929,8 @@ _executer_recive_signature (executer_job_t * job)
   rs_result result;
   rs_buffers_t rsbuf;
 
+  utils_debug ("Receiving signature");
+
   //Load the signature
   signature_job = rs_loadsig_begin (&signature);
   inrs.type = _EXECUTER_SOCKET;
@@ -953,6 +968,8 @@ _executer_send_file (executer_job_t * job)
   size_t leido;
   FILE *file;
   char buf[_EXECUTER_DEFAULT_OUT];
+
+  utils_debug ("Sending file data");
 
   file = fopen (job->realpath, "r");
   if (file == 0)
@@ -996,6 +1013,7 @@ executer_result
 _executer_mkdir (executer_job_t * job)
 {
 
+  utils_debug ("Making directory '%s'", job->realpath);
   if (mkdir (job->realpath, job->mode) != 0)
     {
       utils_error ("Error creating directory '%s': %s", job->realpath,
@@ -1013,6 +1031,8 @@ executer_result
 _executer_read_permission (executer_job_t * job)
 {
   mode_t mode;
+
+  utils_debug ("Reading file permissions");
 
   if (_executer_read_buffer (job->peer_sock, &mode, sizeof (mode)) !=
       sizeof (mode))
@@ -1034,6 +1054,8 @@ _executer_send_permission (executer_job_t * job)
 {
   mode_t mode;
   struct stat stat2;
+
+  utils_debug ("Sending file permissions");
   if (lstat (job->realpath, &stat2) != 0)
     {
       utils_error ("Error reading stat from file '%s': %s", job->realpath,
@@ -1056,6 +1078,7 @@ _executer_wait_modify (executer_job_t * job)
 {
   //Wait for read operation from the peer
   int operation;
+  utils_debug ("Waiting for modify mode");
   size_t leido =
     _executer_read_buffer (job->peer_sock, &operation, sizeof (operation));
   if (leido != sizeof (operation))
@@ -1106,6 +1129,9 @@ executer_send (int sock, mensaje * mens, const char *file)
   int ret;
   executer_job_t job;
 
+  utils_info ("Starting send job for file '%s' operation '%i'", file,
+	      mens->operacion);
+
   job.file = malloc (mens->file_size);
   strcpy (job.file, file);
   job.peer_sock = sock;
@@ -1131,6 +1157,7 @@ executer_send (int sock, mensaje * mens, const char *file)
 
   free (job.file);
   free (job.realpath);
+  utils_info ("Send job finished");
   return ret;
 }
 
@@ -1141,6 +1168,9 @@ executer_receive (int sock, mensaje * mens, const char *file)
   int ret;
   executer_job_t job;
   bool conflict;
+
+  utils_info ("Starting receiving job for file '%s' operation '%i'", file,
+	      mens->operacion);
 
   job.file = malloc (mens->file_size);
   strcpy (job.file, file);
@@ -1241,6 +1271,8 @@ executer_receive (int sock, mensaje * mens, const char *file)
 
   free (job.file);
   free (job.realpath);
+
+  utils_info ("Receive job end");
 
   return ret;
 }
