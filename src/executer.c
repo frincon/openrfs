@@ -761,6 +761,7 @@ _executer_receive_file (executer_job_t * job)
 	    }
 
 	  ret = fwrite (buf, 1, size, file);
+	  free (buf);
 
 	  if (ret != size)
 	    {
@@ -1114,6 +1115,15 @@ _executer_wait_modify (executer_job_t * job)
   return EXECUTER_ERROR;
 }
 
+void
+_executer_free_job_resources (executer_job_t * job)
+{
+  if (job->tempfile != NULL)
+    {
+      free (job->tempfile);
+    }
+}
+
 int
 _executer_run_job (executer_job_t * job)
 {
@@ -1125,10 +1135,12 @@ _executer_run_job (executer_job_t * job)
 	{
 	  // TODO Improve error handling
 	  utils_error ("Error running job, job cancelled");
+	  _executer_free_job_resources (job);
 	  return EXIT_FAILURE;
 	}
     }
   while (result == EXECUTER_RUNNING);
+  _executer_free_job_resources (job);
   return EXIT_SUCCESS;
 }
 
@@ -1145,6 +1157,7 @@ executer_send (int sock, mensaje * mens, const char *file)
   strcpy (job.file, file);
   job.peer_sock = sock;
   job.time = mens->time;
+  job.tempfile = NULL;
   _executer_real_path (file, &(job.realpath));
 
   switch (mens->operacion)
@@ -1185,6 +1198,7 @@ executer_receive (int sock, mensaje * mens, const char *file)
   strcpy (job.file, file);
   job.peer_sock = sock;
   job.time = mens->time;
+  job.tempfile = NULL;
   _executer_real_path (file, &(job.realpath));
 
 // Bien, me han enviado un fichero, debo comprobar en que estado está aquí.
