@@ -813,7 +813,7 @@ _executer_check_exists (executer_job_t * job)
 int
 _executer_send_revert (executer_job_t * job)
 {
-  utils_debug ("The file %s has operations after, send nothing operation.");
+  utils_debug ("The file %s has operations after, send nothing operation.", job->realpath);
   int operacion = _EXECUTER_REVERT;
   if (!_executer_send_buffer (job->peer_sock, &operacion, sizeof (int)))
     {
