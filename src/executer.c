@@ -68,13 +68,15 @@ int
 _executer_read_buffer (int sock, void *buf, size_t size)
 {
   size_t leido;
+  size_t left;
 
+  left = size;
   leido = 0;
   utils_trace ("Leyendo del buffer %i bytes...\n", size);
   do
     {
       size_t leido2;
-      leido2 = read (sock, buf, size);
+      leido2 = read (sock, buf, left);
       utils_trace ("Leido %i bytes...\n", leido2);
       if (leido2 == 0)
 	{
@@ -86,6 +88,7 @@ _executer_read_buffer (int sock, void *buf, size_t size)
 	  return leido2;
 	}
       leido += leido2;
+      left -= leido2;
     }
   while (leido < size);
   return leido;
@@ -739,6 +742,9 @@ _executer_receive_file (executer_job_t * job)
 
 	  if (leido != sizeof (size))
 	    {
+	      utils_error
+		("Error receiving next size of block, espected bytes: %i bytes received: %i",
+		 sizeof (size), leido);
 	      protocol_error = true;
 	      break;
 	    }
@@ -747,6 +753,9 @@ _executer_receive_file (executer_job_t * job)
 	  leido = _executer_read_buffer (job->peer_sock, buf, size);
 	  if (leido != size)
 	    {
+	      utils_error
+		("Error receiving file data: bytes expected: %i bytes received: %i",
+		 size, leido);
 	      protocol_error = true;
 	      break;
 	    }
