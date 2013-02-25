@@ -1,7 +1,7 @@
 # Signature of the current package.
-m4_define([AT_PACKAGE_NAME],      [prueba3])
-m4_define([AT_PACKAGE_TARNAME],   [prueba3])
-m4_define([AT_PACKAGE_VERSION],   [1.0])
-m4_define([AT_PACKAGE_STRING],    [prueba3 1.0])
+m4_define([AT_PACKAGE_NAME],      [opendfs])
+m4_define([AT_PACKAGE_TARNAME],   [opendfs])
+m4_define([AT_PACKAGE_VERSION],   [0.1.snapshot])
+m4_define([AT_PACKAGE_STRING],    [OpenDFS Distributed File System 0.1.snapshot])
 m4_define([AT_PACKAGE_BUGREPORT], [])
 m4_define([AT_PACKAGE_URL],       [])
