@@ -227,6 +227,41 @@ _executer_delete (executer_job_t * job)
   return return_value;
 }
 
+executer_result
+_executer_delete_dir (executer_job_t * job)
+{
+  int ret;
+  struct stat buf;
+  char *path;
+
+  int return_value = EXECUTER_END;
+
+  _executer_real_path (job->file, &path);
+
+  utils_debug ("Deleting directory: '%s' whith real path '%s'", job->file,
+	       path);
+
+  ret = lstat (path, &buf);
+  if (ret != 0)
+    {
+      utils_warn ("Error making lstat in file '%s': %s", path,
+		  strerror (errno));
+      return_value = EXECUTER_ERROR;
+    }
+
+  if (rmdir (path) != 0)
+    {
+      utils_error ("Error deleting directory '%s': %s", path,
+		   strerror (errno));
+      return_value = EXECUTER_ERROR;
+    }
+
+  free (path);
+
+  return return_value;
+}
+
+
 rs_result
 _executer_in_callback (rs_job_t * job, rs_buffers_t * buf, void *opaque)
 {
@@ -1162,6 +1197,7 @@ executer_send (int sock, mensaje * mens, const char *file)
   switch (mens->operacion)
     {
     case OPENDFS_DELETE:
+    case OPENDFS_DELETE_DIR:
       // TODO Esperar respuesta OK
       break;
     case OPENDFS_MODIFY:
@@ -1288,6 +1324,12 @@ executer_receive (int sock, mensaje * mens, const char *file)
 	  job.next_operation = _executer_read_permission;
 	  job.operation = EXECUTER_CREATE_DIR;
 	  ret = _executer_run_job (&job);
+	  break;
+	case OPENDFS_DELETE_DIR:
+	  job.next_operation = _executer_delete_dir;
+	  job.operation = EXECUTER_DELETE_DIR;
+	  ret = _executer_run_job (&job);
+	  break;
 	}
     }
 

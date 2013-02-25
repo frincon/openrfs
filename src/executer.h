@@ -27,7 +27,8 @@
 
 typedef enum
 {
-  EXECUTER_MODIFY = 0, EXECUTER_DELETE = 1, EXECUTER_CREATE_DIR = 2
+  EXECUTER_MODIFY = 0, EXECUTER_DELETE = 1, EXECUTER_CREATE_DIR =
+    2, EXECUTER_DELETE_DIR = 4
 } executer_operation;
 
 typedef enum

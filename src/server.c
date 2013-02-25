@@ -105,9 +105,9 @@ _server_run (void *ptr)
       if (new_socket < 0)
 	error (EXIT_FAILURE, errno, "Error accepting connection");
 
-      fprintf (stderr, MY_NAME ":%s:%s: Connect from host %s, port %hd.\n",
-	       __FILE__, __FUNCTION__, inet_ntoa (clientname.sin_addr),
-	       ntohs (clientname.sin_port));
+      utils_info ("Connect from host %s, port %hd.\n",
+		  inet_ntoa (clientname.sin_addr),
+		  ntohs (clientname.sin_port));
 
       bytes_readed = read (new_socket, buffer, MAGIC_LEN - 1);
       buffer[MAGIC_LEN - 1] = '\0';

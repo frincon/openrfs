@@ -613,7 +613,8 @@ at_help_all="1;general.at:54;sinc: create file;sinc;
 2;general.at:69;sinc: create directory;sinc;
 3;general.at:81;sinc: modify file;sinc;
 4;general.at:97;sinc: delete file;sinc;
-5;general.at:115;sinc: modify with conflict;sinc;
+5;general.at:115;sinc: delete directory;sinc;
+6;general.at:133;sinc: modify with conflict;sinc;
 "
 # List of the all the test groups.
 at_groups_all=`$as_echo "$at_help_all" | sed 's/;.*//'`
@@ -627,7 +628,7 @@ at_fn_validate_ranges ()
   for at_grp
   do
     eval at_value=\$$at_grp
-    if test $at_value -lt 1 || test $at_value -gt 5; then
+    if test $at_value -lt 1 || test $at_value -gt 6; then
       $as_echo "invalid test group: $at_value" >&2
       exit 1
     fi
@@ -925,7 +926,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF || at_write_fail=1
-OpenDFS Distributed File System 0.1.snapshot test suite test groups:
+opendfs 0.1.snapshot test suite test groups:
 
  NUM: FILE-NAME:LINE     TEST-GROUP-NAME
       KEYWORDS
@@ -966,7 +967,7 @@ _ATEOF
   exit $at_write_fail
 fi
 if $at_version_p; then
-  $as_echo "$as_me (OpenDFS Distributed File System 0.1.snapshot)" &&
+  $as_echo "$as_me (opendfs 0.1.snapshot)" &&
   cat <<\_ATEOF || at_write_fail=1
 
 Copyright (C) 2012 Fernando Rincón. All rights reserved.
@@ -1158,13 +1159,13 @@ fi
 exec 5>>"$at_suite_log"
 
 # Banners and logs.
-$as_echo "## -------------------------------------------------------- ##
-## OpenDFS Distributed File System 0.1.snapshot test suite. ##
-## -------------------------------------------------------- ##"
+$as_echo "## -------------------------------- ##
+## opendfs 0.1.snapshot test suite. ##
+## -------------------------------- ##"
 {
-  $as_echo "## -------------------------------------------------------- ##
-## OpenDFS Distributed File System 0.1.snapshot test suite. ##
-## -------------------------------------------------------- ##"
+  $as_echo "## -------------------------------- ##
+## opendfs 0.1.snapshot test suite. ##
+## -------------------------------- ##"
   echo
 
   $as_echo "$as_me: command line was:"
@@ -2007,7 +2008,7 @@ _ASBOX
   $as_echo "Please send $at_msg and all information you think might help:
 
    To: <>
-   Subject: [OpenDFS Distributed File System 0.1.snapshot] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
+   Subject: [opendfs 0.1.snapshot] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
 
 You may investigate any problem if you feel able to do so, in which
 case the test suite provides a good starting point.  Its output may
@@ -2119,7 +2120,7 @@ sleep 4
 
 
 mkdir mountdir/1/prueba
-sleep 6
+sleep 12
 
 
 pkill opendfs
@@ -2282,10 +2283,72 @@ read at_status <"$at_status_file"
 #AT_STOP_4
 #AT_START_5
 at_fn_group_banner 5 'general.at:115' \
-  "sinc: modify with conflict" "                     "
+  "sinc: delete directory" "                         "
 at_xfail=no
 (
   $as_echo "5. $at_setup_line: testing $at_desc ..."
+  $at_traceon
+
+
+
+echo
+mkdir testdir
+mkdir testdir/1
+mkdir testdir/2
+mkdir mountdir
+mkdir mountdir/1
+mkdir mountdir/2
+mkdir database
+
+mkdir testdir/1/prueba
+mkdir testdir/2/prueba
+
+declare -i PUERTO1
+declare -i PUERTO2
+PUERTO1=($RANDOM*5000/32768)+5000
+while  "`netstat -an | grep $PUERTO1`" != "" ; do
+        PUERTO1=($RANDOM*5000/32768)+5000
+done
+PUERTO2=($RANDOM*5000/32768)+5000
+while  "`netstat -an | grep $PUERTO2`" != "" ; do
+        PUERTO2=($RANDOM*5000/32768)+5000
+done
+opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+sleep 4
+
+
+rmdir mountdir/1/prueba
+sleep 12
+
+
+pkill opendfs
+sleep 2
+
+{ set +x
+$as_echo "$at_srcdir/general.at:126: test -e  testdir/2/prueba"
+at_fn_check_prepare_trace "general.at:126"
+( $at_check_trace; test -e  testdir/2/prueba
+) >>"$at_stdout" 2>>"$at_stderr"
+at_status=$? at_failed=false
+$at_check_filter
+at_fn_diff_devnull "$at_stderr" || at_failed=:
+at_fn_diff_devnull "$at_stdout" || at_failed=:
+at_fn_check_status 1 $at_status "$at_srcdir/general.at:126"
+$at_failed && at_fn_log_failure
+$at_traceon; }
+
+  set +x
+  $at_times_p && times >"$at_times_file"
+) 5>&1 2>&1 7>&- | eval $at_tee_pipe
+read at_status <"$at_status_file"
+#AT_STOP_5
+#AT_START_6
+at_fn_group_banner 6 'general.at:133' \
+  "sinc: modify with conflict" "                     "
+at_xfail=no
+(
+  $as_echo "6. $at_setup_line: testing $at_desc ..."
   $at_traceon
 
 
@@ -2351,41 +2414,41 @@ sleep 2
 
 
 { set +x
-$as_echo "$at_srcdir/general.at:146: diff testdir/hosts.2 testdir/1/hosts"
-at_fn_check_prepare_trace "general.at:146"
+$as_echo "$at_srcdir/general.at:164: diff testdir/hosts.2 testdir/1/hosts"
+at_fn_check_prepare_trace "general.at:164"
 ( $at_check_trace; diff testdir/hosts.2 testdir/1/hosts
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:146"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:164"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
 { set +x
-$as_echo "$at_srcdir/general.at:147: diff testdir/hosts.2 testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:147"
+$as_echo "$at_srcdir/general.at:165: diff testdir/hosts.2 testdir/2/hosts"
+at_fn_check_prepare_trace "general.at:165"
 ( $at_check_trace; diff testdir/hosts.2 testdir/2/hosts
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:147"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:165"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
 { set +x
-$as_echo "$at_srcdir/general.at:148: diff testdir/hosts.1 testdir/1/.conflicts/*hosts*"
-at_fn_check_prepare_trace "general.at:148"
+$as_echo "$at_srcdir/general.at:166: diff testdir/hosts.1 testdir/1/.conflicts/*hosts*"
+at_fn_check_prepare_trace "general.at:166"
 ( $at_check_trace; diff testdir/hosts.1 testdir/1/.conflicts/*hosts*
 ) >>"$at_stdout" 2>>"$at_stderr"
 at_status=$? at_failed=false
 $at_check_filter
 at_fn_diff_devnull "$at_stderr" || at_failed=:
 at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:148"
+at_fn_check_status 0 $at_status "$at_srcdir/general.at:166"
 $at_failed && at_fn_log_failure
 $at_traceon; }
 
@@ -2393,4 +2456,4 @@ $at_traceon; }
   $at_times_p && times >"$at_times_file"
 ) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
-#AT_STOP_5
+#AT_STOP_6

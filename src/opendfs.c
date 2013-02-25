@@ -55,7 +55,7 @@ enum
   KEY_HELP, KEY_VERSION,
 };
 
-#define MYFS_OPT(t, p, v) { t, offsetof(configuration, p), v }
+#define OPENDFS_OPT(t, p, v) { t, offsetof(configuration, p), v }
 
 void
 convert_path (const char *path, char **path_resultado)
@@ -298,6 +298,13 @@ xmp_rmdir (const char *path)
   free (path2);
   if (res == -1)
     return -errno;
+  else
+    {
+      queue_operation op;
+      op.file = path;
+      op.operation = OPENDFS_DELETE_DIR;
+      queue_add_operation (&op);
+    }
 
   return 0;
 }
@@ -379,6 +386,8 @@ xmp_chmod (const char *path, mode_t mode)
   int res;
   char *path2;
 
+  //TODO
+
   convert_path (path, &path2);
   res = chmod (path2, mode);
   free (path2);
@@ -393,6 +402,8 @@ xmp_chown (const char *path, uid_t uid, gid_t gid)
 {
   int res;
   char *path2;
+
+  //TODO 
 
   convert_path (path, &path2);
   res = lchown (path2, uid, gid);
@@ -417,6 +428,14 @@ xmp_truncate (const char *path, off_t size)
   free (path2);
   if (res == -1)
     return -errno;
+  else
+    {
+      queue_operation op;
+      op.file = path;
+      op.operation = OPENDFS_MODIFY;
+      queue_add_operation (&op);
+    }
+
 
   return 0;
 }
@@ -431,6 +450,13 @@ xmp_ftruncate (const char *path, off_t size, struct fuse_file_info *fi)
   res = ftruncate (fi->fh, size);
   if (res == -1)
     return -errno;
+  else
+    {
+      queue_operation op;
+      op.file = path;
+      op.operation = OPENDFS_MODIFY;
+      queue_add_operation (&op);
+    }
 
   return 0;
 }
@@ -440,6 +466,8 @@ xmp_utimens (const char *path, const struct timespec ts[2])
 {
   int res;
   struct timeval tv[2];
+
+  //TODO
 
   tv[0].tv_sec = ts[0].tv_sec;
   tv[0].tv_usec = ts[0].tv_nsec / 1000;
@@ -603,6 +631,7 @@ xmp_setxattr (const char *path, const char *name, const char *value,
 	      size_t size, int flags)
 {
   int res = lsetxattr (path, name, value, size, flags);
+  //TODO
   if (res == -1)
     return -errno;
   return 0;
@@ -630,6 +659,7 @@ static int
 xmp_removexattr (const char *path, const char *name)
 {
   int res = lremovexattr (path, name);
+  // TODO
   if (res == -1)
     return -errno;
   return 0;
@@ -686,11 +716,13 @@ static struct fuse_operations xmp_oper = {
 };
 
 static struct fuse_opt myfs_opts[] =
-  { MYFS_OPT ("port=%i", port, 0), MYFS_OPT ("peername=%s", peer_name, 0),
-  MYFS_OPT ("path=%s", path, 0),
-  MYFS_OPT ("peerport=%i", peer_port, 0), MYFS_OPT ("database=%s", database,
-						    0),
-  MYFS_OPT ("conflicts=%s", conflicts, 0),
+  { OPENDFS_OPT ("port=%i", port, 0), OPENDFS_OPT ("peername=%s", peer_name,
+						   0),
+  OPENDFS_OPT ("path=%s", path, 0),
+  OPENDFS_OPT ("peerport=%i", peer_port, 0), OPENDFS_OPT ("database=%s",
+							  database,
+							  0),
+  OPENDFS_OPT ("conflicts=%s", conflicts, 0),
 
   FUSE_OPT_KEY ("-V", KEY_VERSION), FUSE_OPT_KEY ("--version", KEY_VERSION),
   FUSE_OPT_KEY ("-h", KEY_HELP),
@@ -711,20 +743,19 @@ myfs_opt_proc (void *data, const char *arg, int key,
 	       "    -h   --help      print help\n"
 	       "    -V   --version   print version\n"
 	       "\n"
-	       "Myfs options:\n"
-	       "    -o mynum=NUM\n"
-	       "    -o mystring=STRING\n"
-	       "    -o mybool\n"
-	       "    -o nomybool\n"
-	       "    -n NUM           same as '-omynum=NUM'\n"
-	       "    --mybool=BOOL    same as 'mybool' or 'nomybool'\n",
-	       outargs->argv[0]);
+	       "OpenDFS options:\n"
+	       "    -o path=STRING\n"
+	       "    -o port=NUM\n"
+	       "    -o peername=STRING\n"
+	       "    -o peerport=NUM\n"
+	       "    -o database=STRING\n"
+	       "    -o conficts=STRING\n", outargs->argv[0]);
       fuse_opt_add_arg (outargs, "-ho");
       fuse_main (outargs->argc, outargs->argv, &xmp_oper, NULL);
       exit (1);
 
     case KEY_VERSION:
-      fprintf (stderr, "Myfs version %s\n", PACKAGE_VERSION);
+      fprintf (stderr, "OpenDFS version %s\n", PACKAGE_VERSION);
       fuse_opt_add_arg (outargs, "--version");
       fuse_main (outargs->argc, outargs->argv, &xmp_oper, NULL);
       exit (0);

@@ -72,7 +72,7 @@ M_OPENDFS_PREPARE
 M_OPENDFS_MOUNT
 
 mkdir mountdir/1/prueba
-sleep 6
+sleep 12
 
 M_OPENDFS_FINISH
 AT_CHECK([test -d testdir/2/prueba],0)
@@ -109,6 +109,24 @@ AT_CHECK([test -e  testdir/2/hosts],1)
 AT_CHECK([test -e  testdir/2/.conflicts/*hosts*], 0)
 AT_CLEANUP
 ##################################################33
+
+
+##################################################33
+AT_SETUP([sinc: delete directory])
+AT_KEYWORDS([sinc])
+M_OPENDFS_PREPARE
+mkdir testdir/1/prueba
+mkdir testdir/2/prueba
+M_OPENDFS_MOUNT
+
+rmdir mountdir/1/prueba
+sleep 12
+
+M_OPENDFS_FINISH
+AT_CHECK([test -e  testdir/2/prueba],1)
+AT_CLEANUP
+##################################################33
+
 
 
 ##################################################33
