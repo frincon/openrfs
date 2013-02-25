@@ -18,8 +18,8 @@ Quick Installation
 Linux: Make sure you have basic development tools and the kernel includes 
 the FUSE kernel module. Then unpack the source tarball and type:
 
-   ./configure
-   make
-   make install # or 'sudo make install' if you aren't root.
+        ./configure
+        make
+        make install # or 'sudo make install' if you aren't root.
   
 
