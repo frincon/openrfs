@@ -14,3 +14,14 @@ opendfs_CPPFLAGS = $(COMMON_CPPFLAGS) $(CONF_CPPFLAGS)
 clean-local:
 	@rm -f *.gcno
 	@rm -f *.gcda
+
+
+
+install-exec-local:
+	$(MKDIR_P) "$(DESTDIR)$(sbindir)"
+	$(LN_S) -f "$(DESTDIR)$(bindir)/opendfs" "$(DESTDIR)$(sbindir)/mount.opendfs"
+
+uninstall-local:
+	$(RM) -f "$(DESTDIR)$(sbindir)/mount.opendfs" 
+
+
