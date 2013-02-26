@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -33,7 +33,7 @@
 #include <netdb.h>
 #include <errno.h>
 
-#include "opendfs.h"
+#include "openrfs.h"
 #include "queue.h"
 #include "executer.h"
 #include "receiver.h"
@@ -91,12 +91,12 @@ _receiver_run (void *ptr)
 	      utils_error ("Error reading file message from peer: %s");
 	      break;
 	    }
-	  if (mens.operacion == OPENDFS_PING)
+	  if (mens.operacion == OPENRFS_PING)
 	    {
 	      // Send PONG
 	      mensaje mens2;
 	      int writed;
-	      mens2.operacion = OPENDFS_PONG;
+	      mens2.operacion = OPENRFS_PONG;
 	      writed = write (sock, &mens2, sizeof (mens2));
 	      if (writed != sizeof (mens2))
 		{

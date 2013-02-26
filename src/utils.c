@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "opendfs.h"
+#include "openrfs.h"
 #include "utils.h"
 
 
@@ -33,7 +33,7 @@ utils_log (int level, const char *file_name, const char *function,
 	   const char *template, ...)
 {
   va_list arguments;
-  if (level >= OPENDFS_TRACE_LEVEL)
+  if (level >= OPENRFS_TRACE_LEVEL)
     {
       // TODO Make this with dynamic memory allocation
       char buf[1000];

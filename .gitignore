@@ -19,5 +19,5 @@ config.log
 config.status
 src/.deps/
 src/stamp-h1
-src/opendfs
+src/openrfs
 src/config.h

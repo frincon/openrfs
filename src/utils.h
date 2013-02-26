@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -23,9 +23,9 @@
 
 #include <pthread.h>
 
-#ifndef OPENDFS_TRACE_LEVEL
-#define OPENDFS_TRACE_LEVEL UTILS_INFO
-#endif /* ! OPENDFS_TRACE_LEVEL */
+#ifndef OPENRFS_TRACE_LEVEL
+#define OPENRFS_TRACE_LEVEL UTILS_INFO
+#endif /* ! OPENRFS_TRACE_LEVEL */
 
 
 

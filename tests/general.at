@@ -15,7 +15,7 @@
 # Author: Fernando Rincón <frm.rincon@gmail.com>
 
 
-m4_define([M_OPENDFS_PREPARE],
+m4_define([M_OPENRFS_PREPARE],
 [
 echo $1
 mkdir testdir
@@ -27,7 +27,7 @@ mkdir mountdir/2
 mkdir database
 ])
 
-m4_define([M_OPENDFS_MOUNT],
+m4_define([M_OPENRFS_MOUNT],
 [
 declare -i PUERTO1
 declare -i PUERTO2
@@ -39,28 +39,28 @@ PUERTO2=($RANDOM*5000/32768)+5000
 while [ "`netstat -an | grep $PUERTO2`" != "" ]; do
         PUERTO2=($RANDOM*5000/32768)+5000
 done
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 4
 ])
 
 
-m4_define([M_OPENDFS_FINISH],
+m4_define([M_OPENRFS_FINISH],
 [
-pkill opendfs
+pkill openrfs
 sleep 2
 ])
 
 AT_SETUP([sinc: create file])
 AT_KEYWORDS([sinc])
 
-M_OPENDFS_PREPARE
-M_OPENDFS_MOUNT
+M_OPENRFS_PREPARE
+M_OPENRFS_MOUNT
 
 cp /etc/hosts mountdir/1
 sleep 6
 
-M_OPENDFS_FINISH
+M_OPENRFS_FINISH
 
 AT_CHECK([diff testdir/1/hosts testdir/2/hosts],0)
 AT_CLEANUP
@@ -68,27 +68,27 @@ AT_CLEANUP
 #######################################################333
 AT_SETUP([sinc: create directory])
 AT_KEYWORDS([sinc])
-M_OPENDFS_PREPARE
-M_OPENDFS_MOUNT
+M_OPENRFS_PREPARE
+M_OPENRFS_MOUNT
 
 mkdir mountdir/1/prueba
 sleep 12
 
-M_OPENDFS_FINISH
+M_OPENRFS_FINISH
 AT_CHECK([test -d testdir/2/prueba],0)
 AT_CLEANUP
 ##################################################33
 AT_SETUP([sinc: modify file])
 AT_KEYWORDS([sinc])
-M_OPENDFS_PREPARE
+M_OPENRFS_PREPARE
 cp /etc/hosts testdir/1
 cp /etc/hosts testdir/2
-M_OPENDFS_MOUNT
+M_OPENRFS_MOUNT
 
 cat /etc/services >> mountdir/1/hosts
 sleep 12
 
-M_OPENDFS_FINISH
+M_OPENRFS_FINISH
 AT_CHECK([diff testdir/1/hosts testdir/2/hosts],0)
 AT_CLEANUP
 ##################################################33
@@ -96,15 +96,15 @@ AT_CLEANUP
 ##################################################33
 AT_SETUP([sinc: delete file])
 AT_KEYWORDS([sinc])
-M_OPENDFS_PREPARE
+M_OPENRFS_PREPARE
 cp /etc/hosts testdir/1
 cp /etc/hosts testdir/2
-M_OPENDFS_MOUNT
+M_OPENRFS_MOUNT
 
 rm mountdir/1/hosts
 sleep 12
 
-M_OPENDFS_FINISH
+M_OPENRFS_FINISH
 AT_CHECK([test -e  testdir/2/hosts],1)
 AT_CHECK([test -e  testdir/2/.conflicts/*hosts*], 0)
 AT_CLEANUP
@@ -114,15 +114,15 @@ AT_CLEANUP
 ##################################################33
 AT_SETUP([sinc: delete directory])
 AT_KEYWORDS([sinc])
-M_OPENDFS_PREPARE
+M_OPENRFS_PREPARE
 mkdir testdir/1/prueba
 mkdir testdir/2/prueba
-M_OPENDFS_MOUNT
+M_OPENRFS_MOUNT
 
 rmdir mountdir/1/prueba
 sleep 12
 
-M_OPENDFS_FINISH
+M_OPENRFS_FINISH
 AT_CHECK([test -e  testdir/2/prueba],1)
 AT_CLEANUP
 ##################################################33
@@ -132,7 +132,7 @@ AT_CLEANUP
 ##################################################33
 AT_SETUP([sinc: modify with conflict])
 AT_KEYWORDS([sinc])
-M_OPENDFS_PREPARE
+M_OPENRFS_PREPARE
 cp /etc/hosts testdir/1
 cp /etc/hosts testdir/2
 
@@ -142,24 +142,24 @@ PUERTO1=($RANDOM*5000/32768)+5000
 PUERTO2=PUERTO1+1
 
 ## Mount first folder
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
 sleep 6
 echo "ONE" >> mountdir/1/hosts
 cp mountdir/1/hosts testdir/hosts.1
-M_OPENDFS_FINISH
+M_OPENRFS_FINISH
 
 ## Mount second folder
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 6
 echo "TWO" >> mountdir/2/hosts
 cp mountdir/2/hosts testdir/hosts.2
-M_OPENDFS_FINISH
+M_OPENRFS_FINISH
 
 
 ## mount all
-M_OPENDFS_MOUNT
+M_OPENRFS_MOUNT
 sleep 12
-M_OPENDFS_FINISH
+M_OPENRFS_FINISH
 
 AT_CHECK([diff testdir/hosts.2 testdir/1/hosts],0)
 AT_CHECK([diff testdir/hosts.2 testdir/2/hosts],0)

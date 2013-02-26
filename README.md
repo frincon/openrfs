@@ -1,13 +1,13 @@
-README for opendfs
+README for OpenRFS
 ==================
-[![Build Status](https://travis-ci.org/frincon/opendfs.png?branch=master)](https://travis-ci.org/frincon/opendfs)
+[![Build Status](https://travis-ci.org/frincon/openrfs.png?branch=master)](https://travis-ci.org/frincon/openrfs)
 
-OpenDFS
+OpenRFS
 -------
-OpenDFS aims to be a replacement for another distributed file system. With OpenDFS you may have sincronized filesystems 
+OpenRFS aims to be a replacement for another replicated file system. With OpenRFS you may have sincronized filesystems 
 between two machines in real time.
 
-OpenDFS not implement any filesystem at low level, it simply envolve a directory with FUSE and log all operations
+OpenRFS not implement any filesystem at low level, it simply envolve a directory with FUSE and log all operations
 in a database for send to another machine. It uses librsync to send changes, that makes no need for send entire
 large files when changes are small.
 

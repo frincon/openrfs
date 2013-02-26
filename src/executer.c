@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -33,7 +33,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include "opendfs.h"
+#include "openrfs.h"
 #include "queue.h"
 #include "utils.h"
 #include "executer.h"
@@ -1196,17 +1196,17 @@ executer_send (int sock, mensaje * mens, const char *file)
 
   switch (mens->operacion)
     {
-    case OPENDFS_DELETE:
-    case OPENDFS_DELETE_DIR:
+    case OPENRFS_DELETE:
+    case OPENRFS_DELETE_DIR:
       // TODO Esperar respuesta OK
       break;
-    case OPENDFS_MODIFY:
+    case OPENRFS_MODIFY:
       // Ok, the next step is wait for modification in the other peer
       job.operation = EXECUTER_MODIFY;
       job.next_operation = _executer_wait_modify;
       ret = _executer_run_job (&job);
       break;
-    case OPENDFS_CREATE_DIR:
+    case OPENRFS_CREATE_DIR:
       job.operation = EXECUTER_CREATE_DIR;
       job.next_operation = _executer_send_permission;
       ret = _executer_run_job (&job);
@@ -1261,7 +1261,7 @@ executer_receive (int sock, mensaje * mens, const char *file)
 
       switch (mens->operacion)
 	{
-	case OPENDFS_DELETE:
+	case OPENRFS_DELETE:
 	  if (time1 > time2)
 	    {
 	      job.next_operation = _executer_delete;
@@ -1272,11 +1272,11 @@ executer_receive (int sock, mensaje * mens, const char *file)
 	      ret = EXECUTER_END;
 	    }
 	  break;
-	case OPENDFS_MODIFY:
+	case OPENRFS_MODIFY:
 	  switch (operation.operation)
 	    {
-	    case OPENDFS_DELETE:
-	    case OPENDFS_MODIFY:
+	    case OPENRFS_DELETE:
+	    case OPENRFS_MODIFY:
 	      if (time2 > time1)
 		{
 		  // Modificado -> Borrado(Despues)
@@ -1291,14 +1291,14 @@ executer_receive (int sock, mensaje * mens, const char *file)
 		  ret = _executer_run_job (&job);
 		}
 	      break;
-	    case OPENDFS_CREATE_DIR:
+	    case OPENRFS_CREATE_DIR:
 	      //TODO
 	      error (EXIT_FAILURE, 0,
 		     "Arreglar esto: se ha creado un directorio que hay en otro");
 	      break;
 	    }
 	  break;
-	case OPENDFS_CREATE_DIR:
+	case OPENRFS_CREATE_DIR:
 	  // TODO
 	  error (EXIT_FAILURE, 0,
 		 "Arreglar esto: se ha creado un directorio que hay en otro");
@@ -1309,23 +1309,23 @@ executer_receive (int sock, mensaje * mens, const char *file)
     {
       switch (mens->operacion)
 	{
-	case OPENDFS_DELETE:
+	case OPENRFS_DELETE:
 	  //Borrado -> No tocado (Copiar y Borrar)
 	  job.next_operation = _executer_delete;
 	  ret = _executer_run_job (&job);
 	  break;
-	case OPENDFS_MODIFY:
+	case OPENRFS_MODIFY:
 	  //Modificado -> No tocado (Modificar sin copiar)
 	  job.next_operation = _executer_check_exists;
 	  job.copy_conflict = false;
 	  ret = _executer_run_job (&job);
 	  break;
-	case OPENDFS_CREATE_DIR:
+	case OPENRFS_CREATE_DIR:
 	  job.next_operation = _executer_read_permission;
 	  job.operation = EXECUTER_CREATE_DIR;
 	  ret = _executer_run_job (&job);
 	  break;
-	case OPENDFS_DELETE_DIR:
+	case OPENRFS_DELETE_DIR:
 	  job.next_operation = _executer_delete_dir;
 	  job.operation = EXECUTER_DELETE_DIR;
 	  ret = _executer_run_job (&job);

@@ -603,7 +603,7 @@ at_change_dir=false
 # Whether to enable colored test results.
 at_color=no
 # List of the tested programs.
-at_tested='opendfs'
+at_tested='openrfs'
 # As many question marks as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
@@ -926,7 +926,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF || at_write_fail=1
-opendfs 0.1.snapshot test suite test groups:
+openrfs 0.1.snapshot test suite test groups:
 
  NUM: FILE-NAME:LINE     TEST-GROUP-NAME
       KEYWORDS
@@ -967,7 +967,7 @@ _ATEOF
   exit $at_write_fail
 fi
 if $at_version_p; then
-  $as_echo "$as_me (opendfs 0.1.snapshot)" &&
+  $as_echo "$as_me (openrfs 0.1.snapshot)" &&
   cat <<\_ATEOF || at_write_fail=1
 
 Copyright (C) 2012 Fernando Rincón. All rights reserved.
@@ -1160,11 +1160,11 @@ exec 5>>"$at_suite_log"
 
 # Banners and logs.
 $as_echo "## -------------------------------- ##
-## opendfs 0.1.snapshot test suite. ##
+## openrfs 0.1.snapshot test suite. ##
 ## -------------------------------- ##"
 {
   $as_echo "## -------------------------------- ##
-## opendfs 0.1.snapshot test suite. ##
+## openrfs 0.1.snapshot test suite. ##
 ## -------------------------------- ##"
   echo
 
@@ -2008,7 +2008,7 @@ _ASBOX
   $as_echo "Please send $at_msg and all information you think might help:
 
    To: <>
-   Subject: [opendfs 0.1.snapshot] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
+   Subject: [openrfs 0.1.snapshot] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
 
 You may investigate any problem if you feel able to do so, in which
 case the test suite provides a good starting point.  Its output may
@@ -2053,8 +2053,8 @@ PUERTO2=($RANDOM*5000/32768)+5000
 while  "`netstat -an | grep $PUERTO2`" != "" ; do
         PUERTO2=($RANDOM*5000/32768)+5000
 done
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 4
 
 
@@ -2062,7 +2062,7 @@ cp /etc/hosts mountdir/1
 sleep 6
 
 
-pkill opendfs
+pkill openrfs
 sleep 2
 
 
@@ -2114,8 +2114,8 @@ PUERTO2=($RANDOM*5000/32768)+5000
 while  "`netstat -an | grep $PUERTO2`" != "" ; do
         PUERTO2=($RANDOM*5000/32768)+5000
 done
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 4
 
 
@@ -2123,7 +2123,7 @@ mkdir mountdir/1/prueba
 sleep 12
 
 
-pkill opendfs
+pkill openrfs
 sleep 2
 
 { set +x
@@ -2176,8 +2176,8 @@ PUERTO2=($RANDOM*5000/32768)+5000
 while  "`netstat -an | grep $PUERTO2`" != "" ; do
         PUERTO2=($RANDOM*5000/32768)+5000
 done
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 4
 
 
@@ -2185,7 +2185,7 @@ cat /etc/services >> mountdir/1/hosts
 sleep 12
 
 
-pkill opendfs
+pkill openrfs
 sleep 2
 
 { set +x
@@ -2238,8 +2238,8 @@ PUERTO2=($RANDOM*5000/32768)+5000
 while  "`netstat -an | grep $PUERTO2`" != "" ; do
         PUERTO2=($RANDOM*5000/32768)+5000
 done
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 4
 
 
@@ -2247,7 +2247,7 @@ rm mountdir/1/hosts
 sleep 12
 
 
-pkill opendfs
+pkill openrfs
 sleep 2
 
 { set +x
@@ -2313,8 +2313,8 @@ PUERTO2=($RANDOM*5000/32768)+5000
 while  "`netstat -an | grep $PUERTO2`" != "" ; do
         PUERTO2=($RANDOM*5000/32768)+5000
 done
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 4
 
 
@@ -2322,7 +2322,7 @@ rmdir mountdir/1/prueba
 sleep 12
 
 
-pkill opendfs
+pkill openrfs
 sleep 2
 
 { set +x
@@ -2371,22 +2371,22 @@ PUERTO1=($RANDOM*5000/32768)+5000
 PUERTO2=PUERTO1+1
 
 ## Mount first folder
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
 sleep 6
 echo "ONE" >> mountdir/1/hosts
 cp mountdir/1/hosts testdir/hosts.1
 
-pkill opendfs
+pkill openrfs
 sleep 2
 
 
 ## Mount second folder
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 6
 echo "TWO" >> mountdir/2/hosts
 cp mountdir/2/hosts testdir/hosts.2
 
-pkill opendfs
+pkill openrfs
 sleep 2
 
 
@@ -2403,13 +2403,13 @@ PUERTO2=($RANDOM*5000/32768)+5000
 while  "`netstat -an | grep $PUERTO2`" != "" ; do
         PUERTO2=($RANDOM*5000/32768)+5000
 done
-opendfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/opendfs1.db -f &
-opendfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/opendfs2.db -f &
+openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
+openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
 sleep 4
 
 sleep 12
 
-pkill opendfs
+pkill openrfs
 sleep 2
 
 

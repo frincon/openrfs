@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -31,7 +31,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#include "opendfs.h"
+#include "openrfs.h"
 #include "receiver.h"
 #include "server.h"
 #include "utils.h"

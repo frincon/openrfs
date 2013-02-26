@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -18,13 +18,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
  */
 
-#ifndef OPENDFS_H_
-#define OPENDFS_H_
+#ifndef OPENRFS_H_
+#define OPENRFS_H_
 
 #include <config.h>
 #include <time.h>
 
-#define MY_NAME "opendfs"
+#define MY_NAME "openrfs"
 
 typedef struct _configuration
 {
@@ -50,12 +50,12 @@ typedef struct _mensaje
 
 enum
 {
-  OPENDFS_DELETE, OPENDFS_MODIFY, OPENDFS_CREATE_DIR, OPENDFS_DELETE_DIR,
-  OPENDFS_PING,
-  OPENDFS_PONG
+  OPENRFS_DELETE, OPENRFS_MODIFY, OPENRFS_CREATE_DIR, OPENRFS_DELETE_DIR,
+  OPENRFS_PING,
+  OPENRFS_PONG
 };
 
-#define MAGIC_SERVER "OPENDFS_V0.1_MAGIC_SERVIDOR"
+#define MAGIC_SERVER "OPENRFS_V0.1_MAGIC_SERVIDOR"
 #define MAGIC_LEN 28
 
 #endif

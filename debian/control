@@ -1,18 +1,18 @@
-Source: opendfs
+Source: openrfs
 Section: unknown
 Priority: extra
 Maintainer: Fernando Rincón <frm.rincon@gmail.com>
 Build-Depends: debhelper (>=9)
 Standards-Version: 0.1-snapshot
-Homepage: http://opendfs.org
+Homepage: http://openrfs.org
 
-Package: opendfs
+Package: openrfs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: OpenDFS Open Source Distributed File System
- OpenDFS aims to be a replacement for another distributed file system. With OpenDFS you may have sincronized filesystems 
+Description: OpenRFS Open Source Replicated File System
+ OpenRFS aims to be a replacement for another replicated file system. With OpenRFS you may have sincronized filesystems 
  between two machines in real time.
  .
- OpenDFS not implement any filesystem at low level, it simply envolve a directory with FUSE and log all operations
+ OpenRFS not implement any filesystem at low level, it simply envolve a directory with FUSE and log all operations
  in a database for send to another machine. It uses librsync to send changes, that makes no need for send entire
  large files when changes are small.

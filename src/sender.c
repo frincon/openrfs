@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -26,7 +26,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "opendfs.h"
+#include "openrfs.h"
 #include "queue.h"
 #include "sender.h"
 #include "utils.h"
@@ -112,7 +112,7 @@ _sender_run (void *ptr)
 	  // TODO make better whith pthread
 	  sleep (1);
 	  // Send Ping and receive pong
-	  mens.operacion = OPENDFS_PING;
+	  mens.operacion = OPENRFS_PING;
 	  writed = write (sock, &mens, sizeof (mens));
 	  if (writed != sizeof (mens))
 	    {
@@ -125,7 +125,7 @@ _sender_run (void *ptr)
 	      utils_warn ("Error reading pong. Closing sender");
 	      break;
 	    }
-	  if (mens.operacion != OPENDFS_PONG)
+	  if (mens.operacion != OPENRFS_PONG)
 	    {
 	      utils_warn ("Error, no pong received. Closing sender");
 	      break;

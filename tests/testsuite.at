@@ -16,7 +16,7 @@ Author: Fernando Rincón <frm.rincon@gmail.com>])
 
 
 AT_INIT
-AT_TESTED([opendfs])
+AT_TESTED([openrfs])
 
 m4_include([general.at])
 

@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -28,7 +28,7 @@
 #include <error.h>
 #include <time.h>
 #include <pthread.h>
-#include "opendfs.h"
+#include "openrfs.h"
 #include "utils.h"
 #include "queue.h"
 

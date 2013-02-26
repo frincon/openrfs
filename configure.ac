@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(opendfs, 0.1.snapshot)
+AC_INIT(openrfs, 0.1.snapshot)
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_AUX_DIR([admin])
 AC_CONFIG_FILES(Makefile src/Makefile)

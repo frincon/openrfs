@@ -1,6 +1,6 @@
 /*
  *
- * opendfs -- Open source distributed file system
+ * openrfs -- Open source distributed file system
  *
  * Copyright (C) 2012 by Fernando Rincon <frm.rincon@gmail.com>
  *
@@ -44,7 +44,7 @@
 #include <stddef.h>
 #include <ulockmgr.h>
 
-#include "opendfs.h"
+#include "openrfs.h"
 #include "queue.h"
 #include "sender.h"
 #include "client.h"
@@ -55,7 +55,7 @@ enum
   KEY_HELP, KEY_VERSION,
 };
 
-#define OPENDFS_OPT(t, p, v) { t, offsetof(configuration, p), v }
+#define OPENRFS_OPT(t, p, v) { t, offsetof(configuration, p), v }
 
 void
 convert_path (const char *path, char **path_resultado)
@@ -76,7 +76,7 @@ xmp_getattr (const char *path, struct stat *stbuf)
   char *path2;
 
   convert_path (path, &path2);
-  // printf("opendfs: xmp_getattr: path: %s path2: %s\n", path, path2);
+  // printf("openrfs: xmp_getattr: path: %s path2: %s\n", path, path2);
   res = lstat (path2, stbuf);
   free (path2);
   if (res == -1)
@@ -123,7 +123,7 @@ xmp_readlink (const char *path, char *buf, size_t size)
   char *path2;
 
   convert_path (path, &path2);
-  // printf("opendfs: xmp_readlink: path: %s path2: %s\n", path, path2);
+  // printf("openrfs: xmp_readlink: path: %s path2: %s\n", path, path2);
   res = readlink (path2, buf, size - 1);
   free (path2);
   if (res == -1)
@@ -258,7 +258,7 @@ xmp_mkdir (const char *path, mode_t mode)
     {
       queue_operation op;
       op.file = path;
-      op.operation = OPENDFS_CREATE_DIR;
+      op.operation = OPENRFS_CREATE_DIR;
       queue_add_operation (&op);
     }
 
@@ -280,7 +280,7 @@ xmp_unlink (const char *path)
     {
       queue_operation op;
       op.file = path;
-      op.operation = OPENDFS_DELETE;
+      op.operation = OPENRFS_DELETE;
       queue_add_operation (&op);
     }
 
@@ -302,7 +302,7 @@ xmp_rmdir (const char *path)
     {
       queue_operation op;
       op.file = path;
-      op.operation = OPENDFS_DELETE_DIR;
+      op.operation = OPENRFS_DELETE_DIR;
       queue_add_operation (&op);
     }
 
@@ -341,10 +341,10 @@ xmp_rename (const char *from, const char *to)
       queue_operation op1;
       queue_operation op2;
       op1.file = to;
-      op1.operation = OPENDFS_MODIFY;
+      op1.operation = OPENRFS_MODIFY;
       queue_add_operation (&op1);
       op2.file = from;
-      op2.operation = OPENDFS_DELETE;
+      op2.operation = OPENRFS_DELETE;
       queue_add_operation (&op2);
 
 
@@ -373,7 +373,7 @@ xmp_link (const char *from, const char *to)
     {
       queue_operation op;
       op.file = to;
-      op.operation = OPENDFS_MODIFY;
+      op.operation = OPENRFS_MODIFY;
       queue_add_operation (&op);
     }
 
@@ -432,7 +432,7 @@ xmp_truncate (const char *path, off_t size)
     {
       queue_operation op;
       op.file = path;
-      op.operation = OPENDFS_MODIFY;
+      op.operation = OPENRFS_MODIFY;
       queue_add_operation (&op);
     }
 
@@ -454,7 +454,7 @@ xmp_ftruncate (const char *path, off_t size, struct fuse_file_info *fi)
     {
       queue_operation op;
       op.file = path;
-      op.operation = OPENDFS_MODIFY;
+      op.operation = OPENRFS_MODIFY;
       queue_add_operation (&op);
     }
 
@@ -589,7 +589,7 @@ xmp_release (const char *path, struct fuse_file_info *fi)
     {
       queue_operation op;
       op.file = path;
-      op.operation = OPENDFS_MODIFY;
+      op.operation = OPENRFS_MODIFY;
       utils_debug
 	("closed file '%s' opened for write, sending queue, flags: %i", path,
 	 fi->flags);
@@ -716,13 +716,13 @@ static struct fuse_operations xmp_oper = {
 };
 
 static struct fuse_opt myfs_opts[] =
-  { OPENDFS_OPT ("port=%i", port, 0), OPENDFS_OPT ("peername=%s", peer_name,
+  { OPENRFS_OPT ("port=%i", port, 0), OPENRFS_OPT ("peername=%s", peer_name,
 						   0),
-  OPENDFS_OPT ("path=%s", path, 0),
-  OPENDFS_OPT ("peerport=%i", peer_port, 0), OPENDFS_OPT ("database=%s",
+  OPENRFS_OPT ("path=%s", path, 0),
+  OPENRFS_OPT ("peerport=%i", peer_port, 0), OPENRFS_OPT ("database=%s",
 							  database,
 							  0),
-  OPENDFS_OPT ("conflicts=%s", conflicts, 0),
+  OPENRFS_OPT ("conflicts=%s", conflicts, 0),
 
   FUSE_OPT_KEY ("-V", KEY_VERSION), FUSE_OPT_KEY ("--version", KEY_VERSION),
   FUSE_OPT_KEY ("-h", KEY_HELP),
@@ -743,7 +743,7 @@ myfs_opt_proc (void *data, const char *arg, int key,
 	       "    -h   --help      print help\n"
 	       "    -V   --version   print version\n"
 	       "\n"
-	       "OpenDFS options:\n"
+	       "OpenRFS options:\n"
 	       "    -o path=STRING\n"
 	       "    -o port=NUM\n"
 	       "    -o peername=STRING\n"
@@ -755,7 +755,7 @@ myfs_opt_proc (void *data, const char *arg, int key,
       exit (1);
 
     case KEY_VERSION:
-      fprintf (stderr, "OpenDFS version %s\n", PACKAGE_VERSION);
+      fprintf (stderr, "OpenRFS version %s\n", PACKAGE_VERSION);
       fuse_opt_add_arg (outargs, "--version");
       fuse_main (outargs->argc, outargs->argv, &xmp_oper, NULL);
       exit (0);
@@ -814,7 +814,7 @@ main (int argc, char **argv)
   pthread_t sender_thread;
   pthread_t receiver_thread;
 
-#ifdef OPENDFS_RS_DEBUG
+#ifdef OPENRFS_RS_DEBUG
   rs_trace_set_level (RS_LOG_DEBUG);
 #endif
 

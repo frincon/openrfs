@@ -32,7 +32,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = opendfs$(EXEEXT)
+bin_PROGRAMS = openrfs$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in
@@ -46,13 +46,13 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_opendfs_OBJECTS = opendfs-opendfs.$(OBJEXT) \
-	opendfs-queue_sqlite.$(OBJEXT) opendfs-sender.$(OBJEXT) \
-	opendfs-receiver.$(OBJEXT) opendfs-executer.$(OBJEXT) \
-	opendfs-server.$(OBJEXT) opendfs-client.$(OBJEXT) \
-	opendfs-utils.$(OBJEXT)
-opendfs_OBJECTS = $(am_opendfs_OBJECTS)
-opendfs_LDADD = $(LDADD)
+am_openrfs_OBJECTS = openrfs-openrfs.$(OBJEXT) \
+	openrfs-queue_sqlite.$(OBJEXT) openrfs-sender.$(OBJEXT) \
+	openrfs-receiver.$(OBJEXT) openrfs-executer.$(OBJEXT) \
+	openrfs-server.$(OBJEXT) openrfs-client.$(OBJEXT) \
+	openrfs-utils.$(OBJEXT)
+openrfs_OBJECTS = $(am_openrfs_OBJECTS)
+openrfs_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/admin/depcomp
 am__depfiles_maybe = depfiles
@@ -61,8 +61,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(opendfs_SOURCES)
-DIST_SOURCES = $(opendfs_SOURCES)
+SOURCES = $(openrfs_SOURCES)
+DIST_SOURCES = $(openrfs_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -154,14 +154,14 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-dbdir = $(localstatedir)/opendfs
-dbfile = $(dbdir)/opendfs.db
+dbdir = $(localstatedir)/openrfs
+dbfile = $(dbdir)/openrfs.db
 conflicts = .conflicts
-opendfs_conf = $(sysconfdir)/opendfs.conf
+openrfs_conf = $(sysconfdir)/openrfs.conf
 COMMON_CPPFLAGS = -DDBFILE='"$(dbfile)"' -DLOCALEDIR='"$(localedir)"' -DCONFLICTS='"$(conflicts)"' 
-CONF_CPPFLAGS = -DOPENDFS_CONF='"$(opendfs_conf)"'
-opendfs_SOURCES = opendfs.c queue_sqlite.c sender.c receiver.c executer.c server.c client.c utils.c
-opendfs_CPPFLAGS = $(COMMON_CPPFLAGS) $(CONF_CPPFLAGS)
+CONF_CPPFLAGS = -DOPENRFS_CONF='"$(openrfs_conf)"'
+openrfs_SOURCES = openrfs.c queue_sqlite.c sender.c receiver.c executer.c server.c client.c utils.c
+openrfs_CPPFLAGS = $(COMMON_CPPFLAGS) $(CONF_CPPFLAGS)
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -249,9 +249,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-opendfs$(EXEEXT): $(opendfs_OBJECTS) $(opendfs_DEPENDENCIES) $(EXTRA_opendfs_DEPENDENCIES) 
-	@rm -f opendfs$(EXEEXT)
-	$(LINK) $(opendfs_OBJECTS) $(opendfs_LDADD) $(LIBS)
+openrfs$(EXEEXT): $(openrfs_OBJECTS) $(openrfs_DEPENDENCIES) $(EXTRA_openrfs_DEPENDENCIES) 
+	@rm -f openrfs$(EXEEXT)
+	$(LINK) $(openrfs_OBJECTS) $(openrfs_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -259,14 +259,14 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-client.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-executer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-opendfs.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-queue_sqlite.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-receiver.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-sender.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opendfs-utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-executer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-openrfs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-queue_sqlite.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-receiver.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-sender.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-utils.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -282,117 +282,117 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
 
-opendfs-opendfs.o: opendfs.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-opendfs.o -MD -MP -MF $(DEPDIR)/opendfs-opendfs.Tpo -c -o opendfs-opendfs.o `test -f 'opendfs.c' || echo '$(srcdir)/'`opendfs.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-opendfs.Tpo $(DEPDIR)/opendfs-opendfs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='opendfs.c' object='opendfs-opendfs.o' libtool=no @AMDEPBACKSLASH@
+openrfs-openrfs.o: openrfs.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-openrfs.o -MD -MP -MF $(DEPDIR)/openrfs-openrfs.Tpo -c -o openrfs-openrfs.o `test -f 'openrfs.c' || echo '$(srcdir)/'`openrfs.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-openrfs.Tpo $(DEPDIR)/openrfs-openrfs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='openrfs.c' object='openrfs-openrfs.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-opendfs.o `test -f 'opendfs.c' || echo '$(srcdir)/'`opendfs.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-openrfs.o `test -f 'openrfs.c' || echo '$(srcdir)/'`openrfs.c
 
-opendfs-opendfs.obj: opendfs.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-opendfs.obj -MD -MP -MF $(DEPDIR)/opendfs-opendfs.Tpo -c -o opendfs-opendfs.obj `if test -f 'opendfs.c'; then $(CYGPATH_W) 'opendfs.c'; else $(CYGPATH_W) '$(srcdir)/opendfs.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-opendfs.Tpo $(DEPDIR)/opendfs-opendfs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='opendfs.c' object='opendfs-opendfs.obj' libtool=no @AMDEPBACKSLASH@
+openrfs-openrfs.obj: openrfs.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-openrfs.obj -MD -MP -MF $(DEPDIR)/openrfs-openrfs.Tpo -c -o openrfs-openrfs.obj `if test -f 'openrfs.c'; then $(CYGPATH_W) 'openrfs.c'; else $(CYGPATH_W) '$(srcdir)/openrfs.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-openrfs.Tpo $(DEPDIR)/openrfs-openrfs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='openrfs.c' object='openrfs-openrfs.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-opendfs.obj `if test -f 'opendfs.c'; then $(CYGPATH_W) 'opendfs.c'; else $(CYGPATH_W) '$(srcdir)/opendfs.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-openrfs.obj `if test -f 'openrfs.c'; then $(CYGPATH_W) 'openrfs.c'; else $(CYGPATH_W) '$(srcdir)/openrfs.c'; fi`
 
-opendfs-queue_sqlite.o: queue_sqlite.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-queue_sqlite.o -MD -MP -MF $(DEPDIR)/opendfs-queue_sqlite.Tpo -c -o opendfs-queue_sqlite.o `test -f 'queue_sqlite.c' || echo '$(srcdir)/'`queue_sqlite.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-queue_sqlite.Tpo $(DEPDIR)/opendfs-queue_sqlite.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='queue_sqlite.c' object='opendfs-queue_sqlite.o' libtool=no @AMDEPBACKSLASH@
+openrfs-queue_sqlite.o: queue_sqlite.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-queue_sqlite.o -MD -MP -MF $(DEPDIR)/openrfs-queue_sqlite.Tpo -c -o openrfs-queue_sqlite.o `test -f 'queue_sqlite.c' || echo '$(srcdir)/'`queue_sqlite.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-queue_sqlite.Tpo $(DEPDIR)/openrfs-queue_sqlite.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='queue_sqlite.c' object='openrfs-queue_sqlite.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-queue_sqlite.o `test -f 'queue_sqlite.c' || echo '$(srcdir)/'`queue_sqlite.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-queue_sqlite.o `test -f 'queue_sqlite.c' || echo '$(srcdir)/'`queue_sqlite.c
 
-opendfs-queue_sqlite.obj: queue_sqlite.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-queue_sqlite.obj -MD -MP -MF $(DEPDIR)/opendfs-queue_sqlite.Tpo -c -o opendfs-queue_sqlite.obj `if test -f 'queue_sqlite.c'; then $(CYGPATH_W) 'queue_sqlite.c'; else $(CYGPATH_W) '$(srcdir)/queue_sqlite.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-queue_sqlite.Tpo $(DEPDIR)/opendfs-queue_sqlite.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='queue_sqlite.c' object='opendfs-queue_sqlite.obj' libtool=no @AMDEPBACKSLASH@
+openrfs-queue_sqlite.obj: queue_sqlite.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-queue_sqlite.obj -MD -MP -MF $(DEPDIR)/openrfs-queue_sqlite.Tpo -c -o openrfs-queue_sqlite.obj `if test -f 'queue_sqlite.c'; then $(CYGPATH_W) 'queue_sqlite.c'; else $(CYGPATH_W) '$(srcdir)/queue_sqlite.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-queue_sqlite.Tpo $(DEPDIR)/openrfs-queue_sqlite.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='queue_sqlite.c' object='openrfs-queue_sqlite.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-queue_sqlite.obj `if test -f 'queue_sqlite.c'; then $(CYGPATH_W) 'queue_sqlite.c'; else $(CYGPATH_W) '$(srcdir)/queue_sqlite.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-queue_sqlite.obj `if test -f 'queue_sqlite.c'; then $(CYGPATH_W) 'queue_sqlite.c'; else $(CYGPATH_W) '$(srcdir)/queue_sqlite.c'; fi`
 
-opendfs-sender.o: sender.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-sender.o -MD -MP -MF $(DEPDIR)/opendfs-sender.Tpo -c -o opendfs-sender.o `test -f 'sender.c' || echo '$(srcdir)/'`sender.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-sender.Tpo $(DEPDIR)/opendfs-sender.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sender.c' object='opendfs-sender.o' libtool=no @AMDEPBACKSLASH@
+openrfs-sender.o: sender.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-sender.o -MD -MP -MF $(DEPDIR)/openrfs-sender.Tpo -c -o openrfs-sender.o `test -f 'sender.c' || echo '$(srcdir)/'`sender.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-sender.Tpo $(DEPDIR)/openrfs-sender.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sender.c' object='openrfs-sender.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-sender.o `test -f 'sender.c' || echo '$(srcdir)/'`sender.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-sender.o `test -f 'sender.c' || echo '$(srcdir)/'`sender.c
 
-opendfs-sender.obj: sender.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-sender.obj -MD -MP -MF $(DEPDIR)/opendfs-sender.Tpo -c -o opendfs-sender.obj `if test -f 'sender.c'; then $(CYGPATH_W) 'sender.c'; else $(CYGPATH_W) '$(srcdir)/sender.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-sender.Tpo $(DEPDIR)/opendfs-sender.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sender.c' object='opendfs-sender.obj' libtool=no @AMDEPBACKSLASH@
+openrfs-sender.obj: sender.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-sender.obj -MD -MP -MF $(DEPDIR)/openrfs-sender.Tpo -c -o openrfs-sender.obj `if test -f 'sender.c'; then $(CYGPATH_W) 'sender.c'; else $(CYGPATH_W) '$(srcdir)/sender.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-sender.Tpo $(DEPDIR)/openrfs-sender.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sender.c' object='openrfs-sender.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-sender.obj `if test -f 'sender.c'; then $(CYGPATH_W) 'sender.c'; else $(CYGPATH_W) '$(srcdir)/sender.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-sender.obj `if test -f 'sender.c'; then $(CYGPATH_W) 'sender.c'; else $(CYGPATH_W) '$(srcdir)/sender.c'; fi`
 
-opendfs-receiver.o: receiver.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-receiver.o -MD -MP -MF $(DEPDIR)/opendfs-receiver.Tpo -c -o opendfs-receiver.o `test -f 'receiver.c' || echo '$(srcdir)/'`receiver.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-receiver.Tpo $(DEPDIR)/opendfs-receiver.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='receiver.c' object='opendfs-receiver.o' libtool=no @AMDEPBACKSLASH@
+openrfs-receiver.o: receiver.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-receiver.o -MD -MP -MF $(DEPDIR)/openrfs-receiver.Tpo -c -o openrfs-receiver.o `test -f 'receiver.c' || echo '$(srcdir)/'`receiver.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-receiver.Tpo $(DEPDIR)/openrfs-receiver.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='receiver.c' object='openrfs-receiver.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-receiver.o `test -f 'receiver.c' || echo '$(srcdir)/'`receiver.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-receiver.o `test -f 'receiver.c' || echo '$(srcdir)/'`receiver.c
 
-opendfs-receiver.obj: receiver.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-receiver.obj -MD -MP -MF $(DEPDIR)/opendfs-receiver.Tpo -c -o opendfs-receiver.obj `if test -f 'receiver.c'; then $(CYGPATH_W) 'receiver.c'; else $(CYGPATH_W) '$(srcdir)/receiver.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-receiver.Tpo $(DEPDIR)/opendfs-receiver.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='receiver.c' object='opendfs-receiver.obj' libtool=no @AMDEPBACKSLASH@
+openrfs-receiver.obj: receiver.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-receiver.obj -MD -MP -MF $(DEPDIR)/openrfs-receiver.Tpo -c -o openrfs-receiver.obj `if test -f 'receiver.c'; then $(CYGPATH_W) 'receiver.c'; else $(CYGPATH_W) '$(srcdir)/receiver.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-receiver.Tpo $(DEPDIR)/openrfs-receiver.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='receiver.c' object='openrfs-receiver.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-receiver.obj `if test -f 'receiver.c'; then $(CYGPATH_W) 'receiver.c'; else $(CYGPATH_W) '$(srcdir)/receiver.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-receiver.obj `if test -f 'receiver.c'; then $(CYGPATH_W) 'receiver.c'; else $(CYGPATH_W) '$(srcdir)/receiver.c'; fi`
 
-opendfs-executer.o: executer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-executer.o -MD -MP -MF $(DEPDIR)/opendfs-executer.Tpo -c -o opendfs-executer.o `test -f 'executer.c' || echo '$(srcdir)/'`executer.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-executer.Tpo $(DEPDIR)/opendfs-executer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='executer.c' object='opendfs-executer.o' libtool=no @AMDEPBACKSLASH@
+openrfs-executer.o: executer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-executer.o -MD -MP -MF $(DEPDIR)/openrfs-executer.Tpo -c -o openrfs-executer.o `test -f 'executer.c' || echo '$(srcdir)/'`executer.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-executer.Tpo $(DEPDIR)/openrfs-executer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='executer.c' object='openrfs-executer.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-executer.o `test -f 'executer.c' || echo '$(srcdir)/'`executer.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-executer.o `test -f 'executer.c' || echo '$(srcdir)/'`executer.c
 
-opendfs-executer.obj: executer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-executer.obj -MD -MP -MF $(DEPDIR)/opendfs-executer.Tpo -c -o opendfs-executer.obj `if test -f 'executer.c'; then $(CYGPATH_W) 'executer.c'; else $(CYGPATH_W) '$(srcdir)/executer.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-executer.Tpo $(DEPDIR)/opendfs-executer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='executer.c' object='opendfs-executer.obj' libtool=no @AMDEPBACKSLASH@
+openrfs-executer.obj: executer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-executer.obj -MD -MP -MF $(DEPDIR)/openrfs-executer.Tpo -c -o openrfs-executer.obj `if test -f 'executer.c'; then $(CYGPATH_W) 'executer.c'; else $(CYGPATH_W) '$(srcdir)/executer.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-executer.Tpo $(DEPDIR)/openrfs-executer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='executer.c' object='openrfs-executer.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-executer.obj `if test -f 'executer.c'; then $(CYGPATH_W) 'executer.c'; else $(CYGPATH_W) '$(srcdir)/executer.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-executer.obj `if test -f 'executer.c'; then $(CYGPATH_W) 'executer.c'; else $(CYGPATH_W) '$(srcdir)/executer.c'; fi`
 
-opendfs-server.o: server.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-server.o -MD -MP -MF $(DEPDIR)/opendfs-server.Tpo -c -o opendfs-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-server.Tpo $(DEPDIR)/opendfs-server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='opendfs-server.o' libtool=no @AMDEPBACKSLASH@
+openrfs-server.o: server.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-server.o -MD -MP -MF $(DEPDIR)/openrfs-server.Tpo -c -o openrfs-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-server.Tpo $(DEPDIR)/openrfs-server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='openrfs-server.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
 
-opendfs-server.obj: server.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-server.obj -MD -MP -MF $(DEPDIR)/opendfs-server.Tpo -c -o opendfs-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-server.Tpo $(DEPDIR)/opendfs-server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='opendfs-server.obj' libtool=no @AMDEPBACKSLASH@
+openrfs-server.obj: server.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-server.obj -MD -MP -MF $(DEPDIR)/openrfs-server.Tpo -c -o openrfs-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-server.Tpo $(DEPDIR)/openrfs-server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='openrfs-server.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
 
-opendfs-client.o: client.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-client.o -MD -MP -MF $(DEPDIR)/opendfs-client.Tpo -c -o opendfs-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-client.Tpo $(DEPDIR)/opendfs-client.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='opendfs-client.o' libtool=no @AMDEPBACKSLASH@
+openrfs-client.o: client.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-client.o -MD -MP -MF $(DEPDIR)/openrfs-client.Tpo -c -o openrfs-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-client.Tpo $(DEPDIR)/openrfs-client.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='openrfs-client.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
 
-opendfs-client.obj: client.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-client.obj -MD -MP -MF $(DEPDIR)/opendfs-client.Tpo -c -o opendfs-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-client.Tpo $(DEPDIR)/opendfs-client.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='opendfs-client.obj' libtool=no @AMDEPBACKSLASH@
+openrfs-client.obj: client.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-client.obj -MD -MP -MF $(DEPDIR)/openrfs-client.Tpo -c -o openrfs-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-client.Tpo $(DEPDIR)/openrfs-client.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='openrfs-client.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
 
-opendfs-utils.o: utils.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-utils.o -MD -MP -MF $(DEPDIR)/opendfs-utils.Tpo -c -o opendfs-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-utils.Tpo $(DEPDIR)/opendfs-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='opendfs-utils.o' libtool=no @AMDEPBACKSLASH@
+openrfs-utils.o: utils.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-utils.o -MD -MP -MF $(DEPDIR)/openrfs-utils.Tpo -c -o openrfs-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-utils.Tpo $(DEPDIR)/openrfs-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='openrfs-utils.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
 
-opendfs-utils.obj: utils.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT opendfs-utils.obj -MD -MP -MF $(DEPDIR)/opendfs-utils.Tpo -c -o opendfs-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/opendfs-utils.Tpo $(DEPDIR)/opendfs-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='opendfs-utils.obj' libtool=no @AMDEPBACKSLASH@
+openrfs-utils.obj: utils.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT openrfs-utils.obj -MD -MP -MF $(DEPDIR)/openrfs-utils.Tpo -c -o openrfs-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/openrfs-utils.Tpo $(DEPDIR)/openrfs-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='openrfs-utils.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opendfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o opendfs-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(openrfs_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o openrfs-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -605,10 +605,10 @@ clean-local:
 
 install-exec-local:
 	$(MKDIR_P) "$(DESTDIR)$(sbindir)"
-	$(LN_S) -f "$(DESTDIR)$(bindir)/opendfs" "$(DESTDIR)$(sbindir)/mount.opendfs"
+	$(LN_S) -f "$(DESTDIR)$(bindir)/openrfs" "$(DESTDIR)$(sbindir)/mount.openrfs"
 
 uninstall-local:
-	$(RM) -f "$(DESTDIR)$(sbindir)/mount.opendfs" 
+	$(RM) -f "$(DESTDIR)$(sbindir)/mount.openrfs" 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
