@@ -55,9 +55,7 @@ struct executer_job
   rs_signature_t *signature;
 };
 
-executer_result executer_work (executer_job_t * job, void *opaque);
-
-executer_result executer_receive (int sock, mensaje * mens, const char *file);
-executer_result executer_send (int sock, mensaje * mens, const char *file);
+int executer_receive (int sock, mensaje * mens, const char *file);
+int executer_send (int sock, mensaje * mens, const char *file);
 
 #endif /* EXECUTER_H_ */

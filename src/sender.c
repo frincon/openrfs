@@ -30,6 +30,7 @@
 #include "queue.h"
 #include "sender.h"
 #include "utils.h"
+#include "executer.h"
 
 void *_sender_run (void *ptr);
 pthread_t _thread_sender = NULL;
@@ -72,6 +73,7 @@ _sender_run (void *ptr)
   while (!_is_sender_stopped)
     {
       queue_operation operation;
+      int result;
       int ret;
       ret = queue_get_operation (&operation);
       // utils_trace ("Sender get operation: %i", ret);
@@ -100,7 +102,7 @@ _sender_run (void *ptr)
 	      break;
 	    }
 
-	  executer_send (sock, &mens, operation.file);
+	  result = executer_send (sock, &mens, operation.file);
 	  queue_delete_operation (&operation);
 	  fflush (stdout);
 	}

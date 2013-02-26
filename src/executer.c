@@ -1040,6 +1040,8 @@ _executer_send_file (executer_job_t * job)
 	{
 	  utils_error ("Error sending file data to peer: %s",
 		       strerror (errno));
+	  fclose (file);
+	  return EXECUTER_ERROR;
 	}
     }
   while (!feof (file));
@@ -1178,7 +1180,7 @@ _executer_run_job (executer_job_t * job)
   return EXIT_SUCCESS;
 }
 
-executer_result
+int
 executer_send (int sock, mensaje * mens, const char *file)
 {
   int ret;
@@ -1218,7 +1220,7 @@ executer_send (int sock, mensaje * mens, const char *file)
   return ret;
 }
 
-executer_result
+int
 executer_receive (int sock, mensaje * mens, const char *file)
 {
 
