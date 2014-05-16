@@ -4,7 +4,7 @@ README for OpenRFS
 
 OpenRFS
 -------
-OpenRFS aims to be a replacement for another replicated file system. With OpenRFS you may have sincronized filesystems 
+OpenRFS aims to be a replacement for replicated file system. With OpenRFS you may have sincronized filesystems 
 between two machines in real time.
 
 OpenRFS not implement any filesystem at low level, it simply envolve a directory with FUSE and log all operations
