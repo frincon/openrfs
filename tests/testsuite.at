@@ -18,5 +18,5 @@ Author: Fernando Rincón <frm.rincon@gmail.com>])
 AT_INIT
 AT_TESTED([openrfs])
 
-m4_include([general.at])
+m4_include([posix.at])
 

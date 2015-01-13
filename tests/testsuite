@@ -1,5 +1,5 @@
 #! /bin/sh
-# Generated from tests/testsuite.at by GNU Autoconf 2.68.
+# Generated from tests/testsuite.at by GNU Autoconf 2.69.
 #
 # Copyright (C) 2012 Fernando Rincón. All rights reserved.
 # This copyrighted material is made available to anyone wishing to use, modify,
@@ -17,7 +17,7 @@
 #
 # Author: Fernando Rincón <frm.rincon@gmail.com>
 #
-# Copyright (C) 2009, 2010 Free Software Foundation, Inc.
+# Copyright (C) 2009-2012 Free Software Foundation, Inc.
 #
 # This test suite is free software; the Free Software Foundation gives
 # unlimited permission to copy, distribute and modify it.
@@ -178,7 +178,8 @@ if ( set x; as_fn_ret_success y && test x = \"\$1\" ); then :
 else
   exitcode=1; echo positional parameters were not saved.
 fi
-test x\$exitcode = x0 || exit 1"
+test x\$exitcode = x0 || exit 1
+test -x / || exit 1"
   as_suggested="  as_lineno_1=";as_suggested=$as_suggested$LINENO;as_suggested=$as_suggested" as_lineno_1a=\$LINENO
   as_lineno_2=";as_suggested=$as_suggested$LINENO;as_suggested=$as_suggested" as_lineno_2a=\$LINENO
   eval 'test \"x\$as_lineno_1'\$as_run'\" != \"x\$as_lineno_2'\$as_run'\" &&
@@ -223,21 +224,25 @@ IFS=$as_save_IFS
 
 
       if test "x$CONFIG_SHELL" != x; then :
-  # We cannot yet assume a decent shell, so we have to provide a
-	# neutralization value for shells without unset; and this also
-	# works around shells that cannot unset nonexistent variables.
-	# Preserve -v and -x to the replacement shell.
-	BASH_ENV=/dev/null
-	ENV=/dev/null
-	(unset BASH_ENV) >/dev/null 2>&1 && unset BASH_ENV ENV
-	export CONFIG_SHELL
-	case $- in # ((((
-	  *v*x* | *x*v* ) as_opts=-vx ;;
-	  *v* ) as_opts=-v ;;
-	  *x* ) as_opts=-x ;;
-	  * ) as_opts= ;;
-	esac
-	exec "$CONFIG_SHELL" $as_opts "$as_myself" ${1+"$@"}
+  export CONFIG_SHELL
+             # We cannot yet assume a decent shell, so we have to provide a
+# neutralization value for shells without unset; and this also
+# works around shells that cannot unset nonexistent variables.
+# Preserve -v and -x to the replacement shell.
+BASH_ENV=/dev/null
+ENV=/dev/null
+(unset BASH_ENV) >/dev/null 2>&1 && unset BASH_ENV ENV
+case $- in # ((((
+  *v*x* | *x*v* ) as_opts=-vx ;;
+  *v* ) as_opts=-v ;;
+  *x* ) as_opts=-x ;;
+  * ) as_opts= ;;
+esac
+exec $CONFIG_SHELL $as_opts "$as_myself" ${1+"$@"}
+# Admittedly, this is quite paranoid, since all the known shells bail
+# out after a failed `exec'.
+$as_echo "$0: could not re-execute with $CONFIG_SHELL" >&2
+exit 255
 fi
 
     if test x$as_have_required = xno; then :
@@ -339,6 +344,14 @@ $as_echo X"$as_dir" |
 
 
 } # as_fn_mkdir_p
+
+# as_fn_executable_p FILE
+# -----------------------
+# Test if FILE is an executable regular file.
+as_fn_executable_p ()
+{
+  test -f "$1" && test -x "$1"
+} # as_fn_executable_p
 # as_fn_append VAR VALUE
 # ----------------------
 # Append the text in VALUE to the end of the definition contained in VAR. Take
@@ -460,6 +473,10 @@ as_cr_alnum=$as_cr_Letters$as_cr_digits
   chmod +x "$as_me.lineno" ||
     { $as_echo "$as_me: error: cannot create $as_me.lineno; rerun with a POSIX shell" >&2; as_fn_exit 1; }
 
+  # If we had to re-execute with $CONFIG_SHELL, we're ensured to have
+  # already done that, so ensure we don't try to do so again and fall
+  # in an infinite loop.  This has already happened in practice.
+  _as_can_reexec=no; export _as_can_reexec
   # Don't try to exec as it changes $[0], causing all sort of problems
   # (the dirname of $[0] is not the place where we might find the
   # original and so on.  Autoconf is especially sensitive to this).
@@ -494,16 +511,16 @@ if (echo >conf$$.file) 2>/dev/null; then
     # ... but there are two gotchas:
     # 1) On MSYS, both `ln -s file dir' and `ln file dir' fail.
     # 2) DJGPP < 2.04 has no symlinks; `ln -s' creates a wrapper executable.
-    # In both cases, we have to default to `cp -p'.
+    # In both cases, we have to default to `cp -pR'.
     ln -s conf$$.file conf$$.dir 2>/dev/null && test ! -f conf$$.exe ||
-      as_ln_s='cp -p'
+      as_ln_s='cp -pR'
   elif ln conf$$.file conf$$ 2>/dev/null; then
     as_ln_s=ln
   else
-    as_ln_s='cp -p'
+    as_ln_s='cp -pR'
   fi
 else
-  as_ln_s='cp -p'
+  as_ln_s='cp -pR'
 fi
 rm -f conf$$ conf$$.exe conf$$.dir/conf$$.file conf$$.file
 rmdir conf$$.dir 2>/dev/null
@@ -515,28 +532,8 @@ else
   as_mkdir_p=false
 fi
 
-if test -x / >/dev/null 2>&1; then
-  as_test_x='test -x'
-else
-  if ls -dL / >/dev/null 2>&1; then
-    as_ls_L_option=L
-  else
-    as_ls_L_option=
-  fi
-  as_test_x='
-    eval sh -c '\''
-      if test -d "$1"; then
-	test -d "$1/.";
-      else
-	case $1 in #(
-	-*)set "./$1";;
-	esac;
-	case `ls -ld'$as_ls_L_option' "$1" 2>/dev/null` in #((
-	???[sx]*):;;*)false;;esac;fi
-    '\'' sh
-  '
-fi
-as_executable_p=$as_test_x
+as_test_x='test -x'
+as_executable_p=as_fn_executable_p
 
 # Sed expression to map a string onto a valid CPP name.
 as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
@@ -609,12 +606,7 @@ at_tested='openrfs'
 # numerical order.
 at_format='?'
 # Description of all the test groups.
-at_help_all="1;general.at:54;sinc: create file;sinc;
-2;general.at:69;sinc: create directory;sinc;
-3;general.at:81;sinc: modify file;sinc;
-4;general.at:97;sinc: delete file;sinc;
-5;general.at:115;sinc: delete directory;sinc;
-6;general.at:133;sinc: modify with conflict;sinc;
+at_help_all="1;posix.at:18;posix: create file;posix;
 "
 # List of the all the test groups.
 at_groups_all=`$as_echo "$at_help_all" | sed 's/;.*//'`
@@ -628,7 +620,7 @@ at_fn_validate_ranges ()
   for at_grp
   do
     eval at_value=\$$at_grp
-    if test $at_value -lt 1 || test $at_value -gt 6; then
+    if test $at_value -lt 1 || test $at_value -gt 1; then
       $as_echo "invalid test group: $at_value" >&2
       exit 1
     fi
@@ -986,7 +978,7 @@ Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 Author: Fernando Rincón <frm.rincon@gmail.com>
 
-Copyright (C) 2010 Free Software Foundation, Inc.
+Copyright (C) 2012 Free Software Foundation, Inc.
 This test suite is free software; the Free Software Foundation gives
 unlimited permission to copy, distribute and modify it.
 _ATEOF
@@ -2023,8 +2015,8 @@ exit 0
 ## Actual tests. ##
 ## ------------- ##
 #AT_START_1
-at_fn_group_banner 1 'general.at:54' \
-  "sinc: create file" "                              "
+at_fn_group_banner 1 'posix.at:18' \
+  "posix: create file" "                             "
 at_xfail=no
 (
   $as_echo "1. $at_setup_line: testing $at_desc ..."
@@ -2032,428 +2024,13 @@ at_xfail=no
 
 
 
-
-echo
-mkdir testdir
-mkdir testdir/1
-mkdir testdir/2
-mkdir mountdir
-mkdir mountdir/1
-mkdir mountdir/2
-mkdir database
-
-
-declare -i PUERTO1
-declare -i PUERTO2
-PUERTO1=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO1`" != "" ; do
-        PUERTO1=($RANDOM*5000/32768)+5000
-done
-PUERTO2=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO2`" != "" ; do
-        PUERTO2=($RANDOM*5000/32768)+5000
-done
-openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
-openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
-sleep 4
-
-
-cp /etc/hosts mountdir/1
-sleep 6
-
-
-pkill openrfs
-sleep 2
-
-
-{ set +x
-$as_echo "$at_srcdir/general.at:65: diff testdir/1/hosts testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:65"
-( $at_check_trace; diff testdir/1/hosts testdir/2/hosts
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:65"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
+mkdir test1
+mkdir mount1
+openfrs mount1 -o path=$(pwd)/test1
+fusermount -u mount1
+$as_echo "$at_setup_line" >"$at_check_line_file"
   set +x
   $at_times_p && times >"$at_times_file"
 ) 5>&1 2>&1 7>&- | eval $at_tee_pipe
 read at_status <"$at_status_file"
 #AT_STOP_1
-#AT_START_2
-at_fn_group_banner 2 'general.at:69' \
-  "sinc: create directory" "                         "
-at_xfail=no
-(
-  $as_echo "2. $at_setup_line: testing $at_desc ..."
-  $at_traceon
-
-
-
-echo
-mkdir testdir
-mkdir testdir/1
-mkdir testdir/2
-mkdir mountdir
-mkdir mountdir/1
-mkdir mountdir/2
-mkdir database
-
-
-declare -i PUERTO1
-declare -i PUERTO2
-PUERTO1=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO1`" != "" ; do
-        PUERTO1=($RANDOM*5000/32768)+5000
-done
-PUERTO2=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO2`" != "" ; do
-        PUERTO2=($RANDOM*5000/32768)+5000
-done
-openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
-openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
-sleep 4
-
-
-mkdir mountdir/1/prueba
-sleep 12
-
-
-pkill openrfs
-sleep 2
-
-{ set +x
-$as_echo "$at_srcdir/general.at:78: test -d testdir/2/prueba"
-at_fn_check_prepare_trace "general.at:78"
-( $at_check_trace; test -d testdir/2/prueba
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:78"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
-  set +x
-  $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 7>&- | eval $at_tee_pipe
-read at_status <"$at_status_file"
-#AT_STOP_2
-#AT_START_3
-at_fn_group_banner 3 'general.at:81' \
-  "sinc: modify file" "                              "
-at_xfail=no
-(
-  $as_echo "3. $at_setup_line: testing $at_desc ..."
-  $at_traceon
-
-
-
-echo
-mkdir testdir
-mkdir testdir/1
-mkdir testdir/2
-mkdir mountdir
-mkdir mountdir/1
-mkdir mountdir/2
-mkdir database
-
-cp /etc/hosts testdir/1
-cp /etc/hosts testdir/2
-
-declare -i PUERTO1
-declare -i PUERTO2
-PUERTO1=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO1`" != "" ; do
-        PUERTO1=($RANDOM*5000/32768)+5000
-done
-PUERTO2=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO2`" != "" ; do
-        PUERTO2=($RANDOM*5000/32768)+5000
-done
-openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
-openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
-sleep 4
-
-
-cat /etc/services >> mountdir/1/hosts
-sleep 12
-
-
-pkill openrfs
-sleep 2
-
-{ set +x
-$as_echo "$at_srcdir/general.at:92: diff testdir/1/hosts testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:92"
-( $at_check_trace; diff testdir/1/hosts testdir/2/hosts
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:92"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
-  set +x
-  $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 7>&- | eval $at_tee_pipe
-read at_status <"$at_status_file"
-#AT_STOP_3
-#AT_START_4
-at_fn_group_banner 4 'general.at:97' \
-  "sinc: delete file" "                              "
-at_xfail=no
-(
-  $as_echo "4. $at_setup_line: testing $at_desc ..."
-  $at_traceon
-
-
-
-echo
-mkdir testdir
-mkdir testdir/1
-mkdir testdir/2
-mkdir mountdir
-mkdir mountdir/1
-mkdir mountdir/2
-mkdir database
-
-cp /etc/hosts testdir/1
-cp /etc/hosts testdir/2
-
-declare -i PUERTO1
-declare -i PUERTO2
-PUERTO1=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO1`" != "" ; do
-        PUERTO1=($RANDOM*5000/32768)+5000
-done
-PUERTO2=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO2`" != "" ; do
-        PUERTO2=($RANDOM*5000/32768)+5000
-done
-openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
-openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
-sleep 4
-
-
-rm mountdir/1/hosts
-sleep 12
-
-
-pkill openrfs
-sleep 2
-
-{ set +x
-$as_echo "$at_srcdir/general.at:108: test -e  testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:108"
-( $at_check_trace; test -e  testdir/2/hosts
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 1 $at_status "$at_srcdir/general.at:108"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
-{ set +x
-$as_echo "$at_srcdir/general.at:109: test -e  testdir/2/.conflicts/*hosts*"
-at_fn_check_prepare_trace "general.at:109"
-( $at_check_trace; test -e  testdir/2/.conflicts/*hosts*
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:109"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
-  set +x
-  $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 7>&- | eval $at_tee_pipe
-read at_status <"$at_status_file"
-#AT_STOP_4
-#AT_START_5
-at_fn_group_banner 5 'general.at:115' \
-  "sinc: delete directory" "                         "
-at_xfail=no
-(
-  $as_echo "5. $at_setup_line: testing $at_desc ..."
-  $at_traceon
-
-
-
-echo
-mkdir testdir
-mkdir testdir/1
-mkdir testdir/2
-mkdir mountdir
-mkdir mountdir/1
-mkdir mountdir/2
-mkdir database
-
-mkdir testdir/1/prueba
-mkdir testdir/2/prueba
-
-declare -i PUERTO1
-declare -i PUERTO2
-PUERTO1=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO1`" != "" ; do
-        PUERTO1=($RANDOM*5000/32768)+5000
-done
-PUERTO2=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO2`" != "" ; do
-        PUERTO2=($RANDOM*5000/32768)+5000
-done
-openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
-openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
-sleep 4
-
-
-rmdir mountdir/1/prueba
-sleep 12
-
-
-pkill openrfs
-sleep 2
-
-{ set +x
-$as_echo "$at_srcdir/general.at:126: test -e  testdir/2/prueba"
-at_fn_check_prepare_trace "general.at:126"
-( $at_check_trace; test -e  testdir/2/prueba
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 1 $at_status "$at_srcdir/general.at:126"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
-  set +x
-  $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 7>&- | eval $at_tee_pipe
-read at_status <"$at_status_file"
-#AT_STOP_5
-#AT_START_6
-at_fn_group_banner 6 'general.at:133' \
-  "sinc: modify with conflict" "                     "
-at_xfail=no
-(
-  $as_echo "6. $at_setup_line: testing $at_desc ..."
-  $at_traceon
-
-
-
-echo
-mkdir testdir
-mkdir testdir/1
-mkdir testdir/2
-mkdir mountdir
-mkdir mountdir/1
-mkdir mountdir/2
-mkdir database
-
-cp /etc/hosts testdir/1
-cp /etc/hosts testdir/2
-
-declare -i PUERTO1
-declare -i PUERTO2
-PUERTO1=($RANDOM*5000/32768)+5000
-PUERTO2=PUERTO1+1
-
-## Mount first folder
-openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
-sleep 6
-echo "ONE" >> mountdir/1/hosts
-cp mountdir/1/hosts testdir/hosts.1
-
-pkill openrfs
-sleep 2
-
-
-## Mount second folder
-openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
-sleep 6
-echo "TWO" >> mountdir/2/hosts
-cp mountdir/2/hosts testdir/hosts.2
-
-pkill openrfs
-sleep 2
-
-
-
-## mount all
-
-declare -i PUERTO1
-declare -i PUERTO2
-PUERTO1=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO1`" != "" ; do
-        PUERTO1=($RANDOM*5000/32768)+5000
-done
-PUERTO2=($RANDOM*5000/32768)+5000
-while  "`netstat -an | grep $PUERTO2`" != "" ; do
-        PUERTO2=($RANDOM*5000/32768)+5000
-done
-openrfs mountdir/1 -o port=$PUERTO2,peername=localhost,peerport=$PUERTO1,path=$(pwd)/testdir/1,database=database/openrfs1.db -f &
-openrfs mountdir/2 -o port=$PUERTO1,peername=localhost,peerport=$PUERTO2,path=$(pwd)/testdir/2,database=database/openrfs2.db -f &
-sleep 4
-
-sleep 12
-
-pkill openrfs
-sleep 2
-
-
-{ set +x
-$as_echo "$at_srcdir/general.at:164: diff testdir/hosts.2 testdir/1/hosts"
-at_fn_check_prepare_trace "general.at:164"
-( $at_check_trace; diff testdir/hosts.2 testdir/1/hosts
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:164"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
-{ set +x
-$as_echo "$at_srcdir/general.at:165: diff testdir/hosts.2 testdir/2/hosts"
-at_fn_check_prepare_trace "general.at:165"
-( $at_check_trace; diff testdir/hosts.2 testdir/2/hosts
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:165"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
-{ set +x
-$as_echo "$at_srcdir/general.at:166: diff testdir/hosts.1 testdir/1/.conflicts/*hosts*"
-at_fn_check_prepare_trace "general.at:166"
-( $at_check_trace; diff testdir/hosts.1 testdir/1/.conflicts/*hosts*
-) >>"$at_stdout" 2>>"$at_stderr"
-at_status=$? at_failed=false
-$at_check_filter
-at_fn_diff_devnull "$at_stderr" || at_failed=:
-at_fn_diff_devnull "$at_stdout" || at_failed=:
-at_fn_check_status 0 $at_status "$at_srcdir/general.at:166"
-$at_failed && at_fn_log_failure
-$at_traceon; }
-
-  set +x
-  $at_times_p && times >"$at_times_file"
-) 5>&1 2>&1 7>&- | eval $at_tee_pipe
-read at_status <"$at_status_file"
-#AT_STOP_6
