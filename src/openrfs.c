@@ -29,13 +29,15 @@
 #include <string.h>
 #include <locale.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include <sys/time.h>
+#ifdef HAVE_SETXATTR
+#include <sys/xattr.h>
+#endif
 #include <dirent.h>
 
 #include <getopt.h>
@@ -44,11 +46,8 @@
 #include <stddef.h>
 #include <ulockmgr.h>
 
-#include "openrfs.h"
-#include "queue.h"
-#include "sender.h"
-#include "client.h"
 #include "utils.h"
+#include "openrfs.h"
 
 enum
 {
@@ -58,27 +57,21 @@ enum
 #define OPENRFS_OPT(t, p, v) { t, offsetof(configuration, p), v }
 
 void
-convert_path (const char *path, char **path_resultado)
+convert_path (const char *path, char *path_resultado)
 {
-  char *path2;
-  path2 = malloc (strlen (path) + strlen (config.path) + 2);
-  strcpy (path2, config.path);
-  strcat (path2, "/");
-  strcat (path2, path);
-
-  *path_resultado = path2;
+  strcpy (path_resultado, config.path);
+  strcat (path_resultado, "/");
+  strcat (path_resultado, path);
 }
 
 static int
 xmp_getattr (const char *path, struct stat *stbuf)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
-  // printf("openrfs: xmp_getattr: path: %s path2: %s\n", path, path2);
+  convert_path (path, path2);
   res = lstat (path2, stbuf);
-  free (path2);
   if (res == -1)
     return -errno;
 
@@ -103,12 +96,11 @@ static int
 xmp_access (const char *path, int mask)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
 
   res = access (path2, mask);
-  free (path2);
   if (res == -1)
     return -errno;
 
@@ -119,13 +111,11 @@ static int
 xmp_readlink (const char *path, char *buf, size_t size)
 {
   int res;
+  char path2[PATH_MAX];
 
-  char *path2;
-
-  convert_path (path, &path2);
+  convert_path (path, path2);
   // printf("openrfs: xmp_readlink: path: %s path2: %s\n", path, path2);
   res = readlink (path2, buf, size - 1);
-  free (path2);
   if (res == -1)
     return -errno;
 
@@ -148,13 +138,11 @@ xmp_opendir (const char *path, struct fuse_file_info *fi)
   if (d == NULL)
     return -ENOMEM;
 
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
-  utils_trace ("path: %s, converted path: %s", path, path2);
+  convert_path (path, path2);
 
   d->dp = opendir (path2);
-  free (path2);
   if (d->dp == NULL)
     {
       res = -errno;
@@ -227,14 +215,13 @@ static int
 xmp_mknod (const char *path, mode_t mode, dev_t rdev)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
   if (S_ISFIFO (mode))
     res = mkfifo (path2, mode);
   else
     res = mknod (path2, mode, rdev);
-  free (path2);
   if (res == -1)
     return -errno;
 
@@ -245,21 +232,13 @@ static int
 xmp_mkdir (const char *path, mode_t mode)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
   res = mkdir (path2, mode);
-  free (path2);
   if (res == -1)
     {
       return -errno;
-    }
-  else
-    {
-      queue_operation op;
-      op.file = path;
-      op.operation = OPENRFS_CREATE_DIR;
-      queue_add_operation (&op);
     }
 
   return 0;
@@ -269,20 +248,12 @@ static int
 xmp_unlink (const char *path)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
   res = unlink (path2);
-  free (path2);
   if (res == -1)
     return -errno;
-  else
-    {
-      queue_operation op;
-      op.file = path;
-      op.operation = OPENRFS_DELETE;
-      queue_add_operation (&op);
-    }
 
   return 0;
 }
@@ -291,20 +262,12 @@ static int
 xmp_rmdir (const char *path)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
   res = rmdir (path2);
-  free (path2);
   if (res == -1)
     return -errno;
-  else
-    {
-      queue_operation op;
-      op.file = path;
-      op.operation = OPENRFS_DELETE_DIR;
-      queue_add_operation (&op);
-    }
 
   return 0;
 }
@@ -313,10 +276,10 @@ static int
 xmp_symlink (const char *from, const char *to)
 {
   int res;
+  char path2[PATH_MAX];
 
-  //TODO
-
-  res = symlink (from, to);
+  convert_path (to, path2);
+  res = symlink (from, path2);
   if (res == -1)
     return -errno;
 
@@ -327,29 +290,15 @@ static int
 xmp_rename (const char *from, const char *to)
 {
   int res;
-  char *from2;
-  char *to2;
+  char from2[PATH_MAX];
+  char to2[PATH_MAX];
 
-  convert_path (from, &from2);
-  convert_path (to, &to2);
+  convert_path (from, from2);
+  convert_path (to, to2);
 
   res = rename (from2, to2);
   if (res == -1)
     return -errno;
-  else
-    {
-      queue_operation op1;
-      queue_operation op2;
-      op1.file = to;
-      op1.operation = OPENRFS_MODIFY;
-      queue_add_operation (&op1);
-      op2.file = from;
-      op2.operation = OPENRFS_DELETE;
-      queue_add_operation (&op2);
-
-
-    }
-
 
   return 0;
 }
@@ -358,24 +307,15 @@ static int
 xmp_link (const char *from, const char *to)
 {
   int res;
-  char *from2;
-  char *to2;
+  char from2[PATH_MAX];
+  char to2[PATH_MAX];
 
-  convert_path (from, &from2);
-  convert_path (to, &to2);
+  convert_path (from, from2);
+  convert_path (to, to2);
   res = link (from2, to2);
-  free (from2);
-  free (to2);
 
   if (res == -1)
     return -errno;
-  else
-    {
-      queue_operation op;
-      op.file = to;
-      op.operation = OPENRFS_MODIFY;
-      queue_add_operation (&op);
-    }
 
   return 0;
 }
@@ -384,13 +324,10 @@ static int
 xmp_chmod (const char *path, mode_t mode)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  //TODO
-
-  convert_path (path, &path2);
+  convert_path (path, path2);
   res = chmod (path2, mode);
-  free (path2);
   if (res == -1)
     return -errno;
 
@@ -401,13 +338,10 @@ static int
 xmp_chown (const char *path, uid_t uid, gid_t gid)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  //TODO 
-
-  convert_path (path, &path2);
+  convert_path (path, path2);
   res = lchown (path2, uid, gid);
-  free (path2);
 
   if (res == -1)
     return -errno;
@@ -419,23 +353,13 @@ static int
 xmp_truncate (const char *path, off_t size)
 {
   int res;
+  char path2[PATH_MAX];
 
-  char *path2;
-
-  convert_path (path, &path2);
+  convert_path (path, path2);
 
   res = truncate (path2, size);
-  free (path2);
   if (res == -1)
     return -errno;
-  else
-    {
-      queue_operation op;
-      op.file = path;
-      op.operation = OPENRFS_MODIFY;
-      queue_add_operation (&op);
-    }
-
 
   return 0;
 }
@@ -445,18 +369,9 @@ xmp_ftruncate (const char *path, off_t size, struct fuse_file_info *fi)
 {
   int res;
 
-  (void) path;
-
   res = ftruncate (fi->fh, size);
   if (res == -1)
     return -errno;
-  else
-    {
-      queue_operation op;
-      op.file = path;
-      op.operation = OPENRFS_MODIFY;
-      queue_add_operation (&op);
-    }
 
   return 0;
 }
@@ -466,18 +381,15 @@ xmp_utimens (const char *path, const struct timespec ts[2])
 {
   int res;
   struct timeval tv[2];
-
-  //TODO
+  char path2[PATH_MAX];
 
   tv[0].tv_sec = ts[0].tv_sec;
   tv[0].tv_usec = ts[0].tv_nsec / 1000;
   tv[1].tv_sec = ts[1].tv_sec;
   tv[1].tv_usec = ts[1].tv_nsec / 1000;
-  char *path2;
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
   res = utimes (path2, tv);
-  free (path2);
   if (res == -1)
     return -errno;
 
@@ -488,11 +400,10 @@ static int
 xmp_create (const char *path, mode_t mode, struct fuse_file_info *fi)
 {
   int fd;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
   fd = open (path2, fi->flags, mode);
-  free (path2);
   if (fd == -1)
     return -errno;
 
@@ -504,11 +415,10 @@ static int
 xmp_open (const char *path, struct fuse_file_info *fi)
 {
   int fd;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
   fd = open (path2, fi->flags);
-  free (path2);
   if (fd == -1)
     return -errno;
 
@@ -522,7 +432,6 @@ xmp_read (const char *path, char *buf, size_t size, off_t offset,
 {
   int res;
 
-  (void) path;
   res = pread (fi->fh, buf, size, offset);
   if (res == -1)
     res = -errno;
@@ -536,7 +445,6 @@ xmp_write (const char *path, const char *buf, size_t size, off_t offset,
 {
   int res;
 
-  (void) path;
   res = pwrite (fi->fh, buf, size, offset);
   if (res == -1)
     res = -errno;
@@ -548,12 +456,11 @@ static int
 xmp_statfs (const char *path, struct statvfs *stbuf)
 {
   int res;
-  char *path2;
+  char path2[PATH_MAX];
 
-  convert_path (path, &path2);
+  convert_path (path, path2);
 
   res = statvfs (path2, stbuf);
-  free (path2);
   if (res == -1)
     return -errno;
 
@@ -565,7 +472,6 @@ xmp_flush (const char *path, struct fuse_file_info *fi)
 {
   int res;
 
-  (void) path;
   /* This is called from every close on an open file, so call the
      close on the underlying filesystem.        But since flush may be
      called multiple times for an open file, this must not really
@@ -581,25 +487,7 @@ xmp_flush (const char *path, struct fuse_file_info *fi)
 static int
 xmp_release (const char *path, struct fuse_file_info *fi)
 {
-  (void) path;
   close (fi->fh);
-
-  //Comprobamos si se ha abierto en read_only
-  if (fi->flags & (O_RDWR | O_WRONLY))
-    {
-      queue_operation op;
-      op.file = path;
-      op.operation = OPENRFS_MODIFY;
-      utils_debug
-	("closed file '%s' opened for write, sending queue, flags: %i", path,
-	 fi->flags);
-      queue_add_operation (&op);
-    }
-  else
-    {
-      utils_debug ("closed file '%s' opened read only, falgs: %i", path,
-		   fi->flags);
-    }
 
   return 0;
 }
@@ -630,17 +518,25 @@ static int
 xmp_setxattr (const char *path, const char *name, const char *value,
 	      size_t size, int flags)
 {
-  int res = lsetxattr (path, name, value, size, flags);
-  //TODO
+  int res;
+  char path2[PATH_MAX];
+
+  convert_path(path, path2);
+  res = lsetxattr (path2, name, value, size, flags);
   if (res == -1)
     return -errno;
+
   return 0;
 }
 
 static int
 xmp_getxattr (const char *path, const char *name, char *value, size_t size)
 {
-  int res = lgetxattr (path, name, value, size);
+  int res;
+  char path2[PATH_MAX];
+
+  convert_path(path, path2);
+  res = lgetxattr (path2, name, value, size);
   if (res == -1)
     return -errno;
   return res;
@@ -649,7 +545,11 @@ xmp_getxattr (const char *path, const char *name, char *value, size_t size)
 static int
 xmp_listxattr (const char *path, char *list, size_t size)
 {
-  int res = llistxattr (path, list, size);
+  int res;
+  char path2[PATH_MAX];
+
+  convert_path(path, path2);
+  res = llistxattr (path, list, size);
   if (res == -1)
     return -errno;
   return res;
@@ -658,8 +558,11 @@ xmp_listxattr (const char *path, char *list, size_t size)
 static int
 xmp_removexattr (const char *path, const char *name)
 {
-  int res = lremovexattr (path, name);
-  // TODO
+  int res;
+  char path2[PATH_MAX];
+
+  convert_path(path, path2);
+  res = lremovexattr (path, name);
   if (res == -1)
     return -errno;
   return 0;
@@ -716,17 +619,13 @@ static struct fuse_operations xmp_oper = {
 };
 
 static struct fuse_opt myfs_opts[] =
-  { OPENRFS_OPT ("port=%i", port, 0), OPENRFS_OPT ("peername=%s", peer_name,
-						   0),
+  {
   OPENRFS_OPT ("path=%s", path, 0),
-  OPENRFS_OPT ("peerport=%i", peer_port, 0), OPENRFS_OPT ("database=%s",
-							  database,
-							  0),
-  OPENRFS_OPT ("conflicts=%s", conflicts, 0),
-
-  FUSE_OPT_KEY ("-V", KEY_VERSION), FUSE_OPT_KEY ("--version", KEY_VERSION),
+  FUSE_OPT_KEY ("-V", KEY_VERSION),
+  FUSE_OPT_KEY ("--version", KEY_VERSION),
   FUSE_OPT_KEY ("-h", KEY_HELP),
-  FUSE_OPT_KEY ("--help", KEY_HELP), FUSE_OPT_END
+  FUSE_OPT_KEY ("--help", KEY_HELP),
+  FUSE_OPT_END
 };
 
 static int
@@ -745,11 +644,7 @@ myfs_opt_proc (void *data, const char *arg, int key,
 	       "\n"
 	       "OpenRFS options:\n"
 	       "    -o path=STRING\n"
-	       "    -o port=NUM\n"
-	       "    -o peername=STRING\n"
-	       "    -o peerport=NUM\n"
-	       "    -o database=STRING\n"
-	       "    -o conficts=STRING\n", outargs->argv[0]);
+    	   , outargs->argv[0]);
       fuse_opt_add_arg (outargs, "-ho");
       fuse_main (outargs->argc, outargs->argv, &xmp_oper, NULL);
       exit (1);
@@ -763,60 +658,9 @@ myfs_opt_proc (void *data, const char *arg, int key,
   return 1;
 }
 
-void
-init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port)
-{
-  struct hostent *hostinfo;
-
-  name->sin_family = AF_INET;
-  name->sin_port = htons (port);
-  hostinfo = gethostbyname (hostname);
-  if (hostinfo == NULL)
-    {
-      fprintf (stderr, "Unknown host %s.\n", hostname);
-      exit (EXIT_FAILURE);
-    }
-  name->sin_addr = *(struct in_addr *) hostinfo->h_addr;
-}
-
-void
-create_conflicts ()
-{
-  DIR *dp;
-
-  struct dirent *dirp;
-  char path[512];
-  strcpy (path, config.path);
-  strcat (path, "/");
-  strcat (path, CONFLICTS);
-  if ((dp = opendir (path)) == NULL)
-    {
-      if (mkdir (path, 0700) != 0)
-	{
-	  utils_fatal ("Error creating conflicts directory: %s",
-		       strerror (errno));
-	  exit (EXIT_FAILURE);
-	}
-    }
-
-  config.conflicts = malloc (strlen (path) + 1);
-  strcpy (config.conflicts, path);
-
-}
-
 int
 main (int argc, char **argv)
 {
-
-  int sock_servidor;
-  int sock_cliente;
-
-  pthread_t sender_thread;
-  pthread_t receiver_thread;
-
-#ifdef OPENRFS_RS_DEBUG
-  rs_trace_set_level (RS_LOG_DEBUG);
-#endif
 
   struct fuse_args args = FUSE_ARGS_INIT (argc, argv);
   memset (&config, 0, sizeof (config));
@@ -826,39 +670,13 @@ main (int argc, char **argv)
       exit (EXIT_FAILURE);
     }
 
-  if (config.port == 0)
+  if (config.path == NULL)
     {
-      utils_error ("No port specified");
+      utils_error ("No path specified");
       exit (EXIT_FAILURE);
     }
-
-  if (config.peer_name == NULL)
-    {
-      utils_error ("No host specified");
-      exit (EXIT_FAILURE);
-    }
-
-  if (config.peer_port == 0)
-    {
-      utils_error ("No peer port specified");
-      exit (EXIT_FAILURE);
-    }
-
-  queue_init ();
-
-  //Create .conflicts directory
-  create_conflicts ();
-
-  //Start de server
-  server_init (NULL);
-  client_init (NULL);
 
   int ret = fuse_main (args.argc, args.argv, &xmp_oper, NULL);
-
-  server_stop ();
-  client_stop ();
-
-  queue_close ();
 
   return ret;
 }

@@ -21,7 +21,7 @@
 #ifndef OPENRFS_H_
 #define OPENRFS_H_
 
-#include <config.h>
+#include "config.h"
 #include <time.h>
 
 #define MY_NAME "openrfs"
