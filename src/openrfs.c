@@ -35,6 +35,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/fsuid.h>
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
 #endif
@@ -56,9 +57,30 @@ enum
 
 #define OPENRFS_OPT(t, p, v) { t, offsetof(configuration, p), v }
 
-void
+static uid_t oldfsuid;
+static gid_t oldfsgid;
+
+static void
+drop_privs ()
+{
+  struct fuse_context *context;
+  context = fuse_get_context ();
+
+  oldfsuid = setfsuid (context->uid);
+  oldfsgid = setfsuid (context->gid);
+}
+
+static void
+restore_privs ()
+{
+  setfsuid (oldfsuid);
+  setfsgid (oldfsgid);
+}
+
+static void
 convert_path (const char *path, char *path_resultado)
 {
+  // TODO Make it safer
   strcpy (path_resultado, config.path);
   strcat (path_resultado, "/");
   strcat (path_resultado, path);
@@ -71,7 +93,9 @@ xmp_getattr (const char *path, struct stat *stbuf)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   res = lstat (path2, stbuf);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -85,7 +109,9 @@ xmp_fgetattr (const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 
   (void) path;
 
+  drop_privs ();
   res = fstat (fi->fh, stbuf);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -100,7 +126,9 @@ xmp_access (const char *path, int mask)
 
   convert_path (path, path2);
 
+  drop_privs ();
   res = access (path2, mask);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -114,8 +142,10 @@ xmp_readlink (const char *path, char *buf, size_t size)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
-  // printf("openrfs: xmp_readlink: path: %s path2: %s\n", path, path2);
+
+  drop_privs ();
   res = readlink (path2, buf, size - 1);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -142,7 +172,9 @@ xmp_opendir (const char *path, struct fuse_file_info *fi)
 
   convert_path (path, path2);
 
+  drop_privs ();
   d->dp = opendir (path2);
+  restore_privs ();
   if (d->dp == NULL)
     {
       res = -errno;
@@ -169,6 +201,7 @@ xmp_readdir (const char *path, void *buf, fuse_fill_dir_t filler,
   struct xmp_dirp *d = get_dirp (fi);
 
   (void) path;
+  drop_privs ();
   if (offset != d->offset)
     {
       seekdir (d->dp, offset);
@@ -197,6 +230,7 @@ xmp_readdir (const char *path, void *buf, fuse_fill_dir_t filler,
       d->entry = NULL;
       d->offset = nextoff;
     }
+  restore_privs ();
 
   return 0;
 }
@@ -206,7 +240,9 @@ xmp_releasedir (const char *path, struct fuse_file_info *fi)
 {
   struct xmp_dirp *d = get_dirp (fi);
   (void) path;
+  drop_privs ();
   closedir (d->dp);
+  restore_privs ();
   free (d);
   return 0;
 }
@@ -218,10 +254,12 @@ xmp_mknod (const char *path, mode_t mode, dev_t rdev)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   if (S_ISFIFO (mode))
     res = mkfifo (path2, mode);
   else
     res = mknod (path2, mode, rdev);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -235,7 +273,9 @@ xmp_mkdir (const char *path, mode_t mode)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   res = mkdir (path2, mode);
+  restore_privs ();
   if (res == -1)
     {
       return -errno;
@@ -251,7 +291,9 @@ xmp_unlink (const char *path)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   res = unlink (path2);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -265,7 +307,9 @@ xmp_rmdir (const char *path)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   res = rmdir (path2);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -279,7 +323,9 @@ xmp_symlink (const char *from, const char *to)
   char path2[PATH_MAX];
 
   convert_path (to, path2);
+  drop_privs ();
   res = symlink (from, path2);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -296,7 +342,9 @@ xmp_rename (const char *from, const char *to)
   convert_path (from, from2);
   convert_path (to, to2);
 
+  drop_privs ();
   res = rename (from2, to2);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -312,7 +360,9 @@ xmp_link (const char *from, const char *to)
 
   convert_path (from, from2);
   convert_path (to, to2);
+  drop_privs ();
   res = link (from2, to2);
+  restore_privs ();
 
   if (res == -1)
     return -errno;
@@ -327,7 +377,9 @@ xmp_chmod (const char *path, mode_t mode)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   res = chmod (path2, mode);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -341,7 +393,9 @@ xmp_chown (const char *path, uid_t uid, gid_t gid)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   res = lchown (path2, uid, gid);
+  restore_privs ();
 
   if (res == -1)
     return -errno;
@@ -357,7 +411,9 @@ xmp_truncate (const char *path, off_t size)
 
   convert_path (path, path2);
 
+  drop_privs ();
   res = truncate (path2, size);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -369,7 +425,9 @@ xmp_ftruncate (const char *path, off_t size, struct fuse_file_info *fi)
 {
   int res;
 
+  drop_privs ();
   res = ftruncate (fi->fh, size);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -389,7 +447,9 @@ xmp_utimens (const char *path, const struct timespec ts[2])
   tv[1].tv_usec = ts[1].tv_nsec / 1000;
 
   convert_path (path, path2);
+  drop_privs ();
   res = utimes (path2, tv);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -403,7 +463,9 @@ xmp_create (const char *path, mode_t mode, struct fuse_file_info *fi)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   fd = open (path2, fi->flags, mode);
+  restore_privs ();
   if (fd == -1)
     return -errno;
 
@@ -418,7 +480,9 @@ xmp_open (const char *path, struct fuse_file_info *fi)
   char path2[PATH_MAX];
 
   convert_path (path, path2);
+  drop_privs ();
   fd = open (path2, fi->flags);
+  restore_privs ();
   if (fd == -1)
     return -errno;
 
@@ -432,7 +496,9 @@ xmp_read (const char *path, char *buf, size_t size, off_t offset,
 {
   int res;
 
+  drop_privs ();
   res = pread (fi->fh, buf, size, offset);
+  restore_privs ();
   if (res == -1)
     res = -errno;
 
@@ -445,7 +511,9 @@ xmp_write (const char *path, const char *buf, size_t size, off_t offset,
 {
   int res;
 
+  drop_privs ();
   res = pwrite (fi->fh, buf, size, offset);
+  restore_privs ();
   if (res == -1)
     res = -errno;
 
@@ -460,7 +528,9 @@ xmp_statfs (const char *path, struct statvfs *stbuf)
 
   convert_path (path, path2);
 
+  drop_privs ();
   res = statvfs (path2, stbuf);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -477,7 +547,9 @@ xmp_flush (const char *path, struct fuse_file_info *fi)
      called multiple times for an open file, this must not really
      close the file.  This is important if used on a network
      filesystem like NFS which flush the data/metadata on close() */
+  drop_privs ();
   res = close (dup (fi->fh));
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -487,7 +559,9 @@ xmp_flush (const char *path, struct fuse_file_info *fi)
 static int
 xmp_release (const char *path, struct fuse_file_info *fi)
 {
+  drop_privs ();
   close (fi->fh);
+  restore_privs ();
 
   return 0;
 }
@@ -498,6 +572,7 @@ xmp_fsync (const char *path, int isdatasync, struct fuse_file_info *fi)
   int res;
   (void) path;
 
+  drop_privs ();
 #ifndef HAVE_FDATASYNC
   (void) isdatasync;
 #else
@@ -506,6 +581,7 @@ xmp_fsync (const char *path, int isdatasync, struct fuse_file_info *fi)
   else
 #endif
     res = fsync (fi->fh);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -521,8 +597,10 @@ xmp_setxattr (const char *path, const char *name, const char *value,
   int res;
   char path2[PATH_MAX];
 
-  convert_path(path, path2);
+  convert_path (path, path2);
+  drop_privs ();
   res = lsetxattr (path2, name, value, size, flags);
+  restore_privs ();
   if (res == -1)
     return -errno;
 
@@ -535,8 +613,10 @@ xmp_getxattr (const char *path, const char *name, char *value, size_t size)
   int res;
   char path2[PATH_MAX];
 
-  convert_path(path, path2);
+  convert_path (path, path2);
+  drop_privs ();
   res = lgetxattr (path2, name, value, size);
+  restore_privs ();
   if (res == -1)
     return -errno;
   return res;
@@ -548,8 +628,10 @@ xmp_listxattr (const char *path, char *list, size_t size)
   int res;
   char path2[PATH_MAX];
 
-  convert_path(path, path2);
+  convert_path (path, path2);
+  drop_privs ();
   res = llistxattr (path, list, size);
+  restore_privs ();
   if (res == -1)
     return -errno;
   return res;
@@ -561,8 +643,10 @@ xmp_removexattr (const char *path, const char *name)
   int res;
   char path2[PATH_MAX];
 
-  convert_path(path, path2);
+  convert_path (path, path2);
+  drop_privs ();
   res = lremovexattr (path, name);
+  restore_privs ();
   if (res == -1)
     return -errno;
   return 0;
@@ -573,10 +657,14 @@ static int
 xmp_lock (const char *path, struct fuse_file_info *fi, int cmd,
 	  struct flock *lock)
 {
+  int ret;
   (void) path;
 
-  return ulockmgr_op (fi->fh, cmd, lock, &fi->lock_owner,
-		      sizeof (fi->lock_owner));
+  drop_privs ();
+  ret = ulockmgr_op (fi->fh, cmd, lock, &fi->lock_owner,
+		     sizeof (fi->lock_owner));
+  restore_privs ();
+  return ret;
 }
 
 static struct fuse_operations xmp_oper = {
@@ -618,8 +706,7 @@ static struct fuse_operations xmp_oper = {
   .flag_nullpath_ok = 1,
 };
 
-static struct fuse_opt myfs_opts[] =
-  {
+static struct fuse_opt myfs_opts[] = {
   OPENRFS_OPT ("path=%s", path, 0),
   FUSE_OPT_KEY ("-V", KEY_VERSION),
   FUSE_OPT_KEY ("--version", KEY_VERSION),
@@ -642,9 +729,7 @@ myfs_opt_proc (void *data, const char *arg, int key,
 	       "    -h   --help      print help\n"
 	       "    -V   --version   print version\n"
 	       "\n"
-	       "OpenRFS options:\n"
-	       "    -o path=STRING\n"
-    	   , outargs->argv[0]);
+	       "OpenRFS options:\n" "    -o path=STRING\n", outargs->argv[0]);
       fuse_opt_add_arg (outargs, "-ho");
       fuse_main (outargs->argc, outargs->argv, &xmp_oper, NULL);
       exit (1);
