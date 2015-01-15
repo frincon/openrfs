@@ -16,8 +16,8 @@ AC_PROG_LN_S
 AM_PROG_CC_C_O
 AC_GNU_SOURCE
 
-
-AC_DEFINE_UNQUOTED([_FILE_OFFSET_BITS],[64],[Define LFS support])
+PKG_CHECK_MODULES([FUSE], [fuse])
+#AC_DEFINE_UNQUOTED([_FILE_OFFSET_BITS],[64],[Define LFS support])
 AC_DEFINE_UNQUOTED([FUSE_USE_VERSION],[26],[Define fuse version])
 AM_MISSING_PROG([AUTOM4TE], [autom4te])
 AC_USE_SYSTEM_EXTENSIONS
@@ -26,7 +26,7 @@ AC_CHECK_DECL(_DIRENT_HAVE_D_TYPE, [], AC_MSG_ERROR([need _DIRENT_HAVE_D_TYPE]),
 AC_CHECK_LIB(sqlite3, sqlite3_open, [], AC_MSG_ERROR([need SQLITE3 library]))
 AC_CHECK_LIB(rsync, rs_trace_set_level, [], AC_MSG_ERROR([need librsync library]))
 AC_CHECK_LIB(confuse, cfg_parse, [], AC_MSG_ERROR([need confuse library]))
-AC_CHECK_LIB(fuse, fuse_opt_parse, [], AC_MSG_ERROR([need fuse library]))
+#AC_CHECK_LIB(fuse, fuse_opt_parse, [], AC_MSG_ERROR([need fuse library]))
 AC_CHECK_LIB(ulockmgr, ulockmgr_op, [], AC_MSG_ERROR([need ulockmgr library]))
 AC_CHECK_LIB(pthread, pthread_create, [], AC_MSG_ERROR([need pthread library]))
 AC_CHECK_FUNCS(setxattr fdatasync)

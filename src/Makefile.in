@@ -90,9 +90,12 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_openrfs_OBJECTS = openrfs.$(OBJEXT) utils.$(OBJEXT)
+am_openrfs_OBJECTS = openrfs-openrfs.$(OBJEXT) openrfs-utils.$(OBJEXT) \
+	openrfs-privs.$(OBJEXT)
 openrfs_OBJECTS = $(am_openrfs_OBJECTS)
-openrfs_LDADD = $(LDADD)
+openrfs_DEPENDENCIES =
+openrfs_LINK = $(CCLD) $(openrfs_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -109,6 +112,10 @@ DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/admin/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
@@ -170,6 +177,8 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FUSE_CFLAGS = @FUSE_CFLAGS@
+FUSE_LIBS = @FUSE_LIBS@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -192,6 +201,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -238,7 +250,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-openrfs_SOURCES = openrfs.c utils.c
+openrfs_SOURCES = openrfs.c utils.c privs.c
+openrfs_CFLAGS = @FUSE_CFLAGS@
+openrfs_LDADD = @FUSE_LIBS@
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -334,7 +348,7 @@ clean-binPROGRAMS:
 
 openrfs$(EXEEXT): $(openrfs_OBJECTS) $(openrfs_DEPENDENCIES) $(EXTRA_openrfs_DEPENDENCIES) 
 	@rm -f openrfs$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(openrfs_OBJECTS) $(openrfs_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(openrfs_LINK) $(openrfs_OBJECTS) $(openrfs_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -342,8 +356,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-openrfs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-privs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-utils.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -358,6 +373,48 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+openrfs-openrfs.o: openrfs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-openrfs.o -MD -MP -MF $(DEPDIR)/openrfs-openrfs.Tpo -c -o openrfs-openrfs.o `test -f 'openrfs.c' || echo '$(srcdir)/'`openrfs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-openrfs.Tpo $(DEPDIR)/openrfs-openrfs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='openrfs.c' object='openrfs-openrfs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-openrfs.o `test -f 'openrfs.c' || echo '$(srcdir)/'`openrfs.c
+
+openrfs-openrfs.obj: openrfs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-openrfs.obj -MD -MP -MF $(DEPDIR)/openrfs-openrfs.Tpo -c -o openrfs-openrfs.obj `if test -f 'openrfs.c'; then $(CYGPATH_W) 'openrfs.c'; else $(CYGPATH_W) '$(srcdir)/openrfs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-openrfs.Tpo $(DEPDIR)/openrfs-openrfs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='openrfs.c' object='openrfs-openrfs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-openrfs.obj `if test -f 'openrfs.c'; then $(CYGPATH_W) 'openrfs.c'; else $(CYGPATH_W) '$(srcdir)/openrfs.c'; fi`
+
+openrfs-utils.o: utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-utils.o -MD -MP -MF $(DEPDIR)/openrfs-utils.Tpo -c -o openrfs-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-utils.Tpo $(DEPDIR)/openrfs-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='openrfs-utils.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+
+openrfs-utils.obj: utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-utils.obj -MD -MP -MF $(DEPDIR)/openrfs-utils.Tpo -c -o openrfs-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-utils.Tpo $(DEPDIR)/openrfs-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='openrfs-utils.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
+
+openrfs-privs.o: privs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-privs.o -MD -MP -MF $(DEPDIR)/openrfs-privs.Tpo -c -o openrfs-privs.o `test -f 'privs.c' || echo '$(srcdir)/'`privs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-privs.Tpo $(DEPDIR)/openrfs-privs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='privs.c' object='openrfs-privs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-privs.o `test -f 'privs.c' || echo '$(srcdir)/'`privs.c
+
+openrfs-privs.obj: privs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-privs.obj -MD -MP -MF $(DEPDIR)/openrfs-privs.Tpo -c -o openrfs-privs.obj `if test -f 'privs.c'; then $(CYGPATH_W) 'privs.c'; else $(CYGPATH_W) '$(srcdir)/privs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-privs.Tpo $(DEPDIR)/openrfs-privs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='privs.c' object='openrfs-privs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-privs.obj `if test -f 'privs.c'; then $(CYGPATH_W) 'privs.c'; else $(CYGPATH_W) '$(srcdir)/privs.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
