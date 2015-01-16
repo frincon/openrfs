@@ -22,6 +22,8 @@ $TOP_SRCDIR/src/openrfs $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID -o path=$PATH_
 cd $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID
 
 $TOP_SRCDIR/$SCRIPT
+ret=$?
 
 cd ..
 fusermount -u $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID
+exit $RET
