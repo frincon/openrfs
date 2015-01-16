@@ -8,18 +8,20 @@ fi
 TOP_SRCDIR=`readlink -f $1`
 SCRIPT=$2
 
+NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+
 
 CURRENT_DIR=`dirname $(readlink -f $0)`
 
-mkdir -p $TOP_SRCDIR/testsuite.dir/mount
-mkdir -p $TOP_SRCDIR/testsuite.dir/test
+mkdir -p $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID
+mkdir -p $TOP_SRCDIR/testsuite.dir/test_$NEW_UUID
 
-PATH_TEST=`readlink -f $TOP_SRCDIR/testsuite.dir/test`
+PATH_TEST=`readlink -f $TOP_SRCDIR/testsuite.dir/test_$NEW_UUID`
 
-$TOP_SRCDIR/src/openrfs $TOP_SRCDIR/testsuite.dir/mount -o path=$PATH_TEST,allow_other,attr_timeout=0
-cd $TOP_SRCDIR/testsuite.dir/mount
+$TOP_SRCDIR/src/openrfs $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID -o path=$PATH_TEST,allow_other,attr_timeout=0
+cd $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID
 
 $TOP_SRCDIR/$SCRIPT
 
 cd ..
-fusermount -u $TOP_SRCDIR/testsuite.dir/mount
+fusermount -u $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID
