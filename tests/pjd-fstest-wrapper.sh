@@ -26,4 +26,5 @@ ret=$?
 
 cd ..
 fusermount -u $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID
+umount -f $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID
 exit $RET
