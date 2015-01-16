@@ -20,7 +20,10 @@ AT_KEYWORDS([posix])
 
 mkdir test1
 mkdir mount1
-openfrs mount1 -o path=$(pwd)/test1
+openrfs mount1 -o path=$(pwd)/test1,allow_other,attr_timeout=0
+cd mount1
+sudo prove -r pjd-fstest-20080816/tests
+cd ..
 fusermount -u mount1
 AT_CLEANUP
 

@@ -1,10 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([openrfs],[0.1.snapshot])
+AC_INIT([openrfs],[0.1.1])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_AUX_DIR([admin])
 AC_CONFIG_FILES(Makefile src/Makefile)
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AC_CONFIG_TESTDIR([.],[src])
 
 

@@ -918,7 +918,7 @@ fi
 # List of tests.
 if $at_list_p; then
   cat <<_ATEOF || at_write_fail=1
-openrfs 0.1.snapshot test suite test groups:
+openrfs 0.1.1 test suite test groups:
 
  NUM: FILE-NAME:LINE     TEST-GROUP-NAME
       KEYWORDS
@@ -959,7 +959,7 @@ _ATEOF
   exit $at_write_fail
 fi
 if $at_version_p; then
-  $as_echo "$as_me (openrfs 0.1.snapshot)" &&
+  $as_echo "$as_me (openrfs 0.1.1)" &&
   cat <<\_ATEOF || at_write_fail=1
 
 Copyright (C) 2012 Fernando Rincón. All rights reserved.
@@ -1151,13 +1151,13 @@ fi
 exec 5>>"$at_suite_log"
 
 # Banners and logs.
-$as_echo "## -------------------------------- ##
-## openrfs 0.1.snapshot test suite. ##
-## -------------------------------- ##"
+$as_echo "## ------------------------- ##
+## openrfs 0.1.1 test suite. ##
+## ------------------------- ##"
 {
-  $as_echo "## -------------------------------- ##
-## openrfs 0.1.snapshot test suite. ##
-## -------------------------------- ##"
+  $as_echo "## ------------------------- ##
+## openrfs 0.1.1 test suite. ##
+## ------------------------- ##"
   echo
 
   $as_echo "$as_me: command line was:"
@@ -2000,7 +2000,7 @@ _ASBOX
   $as_echo "Please send $at_msg and all information you think might help:
 
    To: <>
-   Subject: [openrfs 0.1.snapshot] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
+   Subject: [openrfs 0.1.1] $as_me: $at_fail_list${at_fail_list:+ failed${at_xpass_list:+, }}$at_xpass_list${at_xpass_list:+ passed unexpectedly}
 
 You may investigate any problem if you feel able to do so, in which
 case the test suite provides a good starting point.  Its output may
@@ -2026,7 +2026,10 @@ at_xfail=no
 
 mkdir test1
 mkdir mount1
-openfrs mount1 -o path=$(pwd)/test1
+openrfs mount1 -o path=$(pwd)/test1,allow_other,attr_timeout=0
+cd mount1
+sudo prove -r pjd-fstest-20080816/tests
+cd ..
 fusermount -u mount1
 $as_echo "$at_setup_line" >"$at_check_line_file"
   set +x
