@@ -10,6 +10,7 @@ echo 1..1
 
 if [ ! -c /dev/fuse ] || [ ! -w /dev/fuse ]; then
 	echo not ok 1 # SKIP Fuse is not available
+	exit 0
 fi
 
 NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
