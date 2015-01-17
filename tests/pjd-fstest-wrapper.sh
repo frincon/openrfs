@@ -18,7 +18,12 @@ mkdir -p $TOP_SRCDIR/testsuite.dir/test_$NEW_UUID
 
 PATH_TEST=`readlink -f $TOP_SRCDIR/testsuite.dir/test_$NEW_UUID`
 
-$TOP_SRCDIR/src/openrfs $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID -o path=$PATH_TEST,allow_other,attr_timeout=0 || exit 1
+$TOP_SRCDIR/src/openrfs $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID -o path=$PATH_TEST,allow_other,attr_timeout=0
+if [ $? -ne 0 ]; then
+	echo 1..1
+	echo "ok 1 # SKIP No support for FUSE"
+	exit 0
+fi
 cd $TOP_SRCDIR/testsuite.dir/mount_$NEW_UUID
 
 $TOP_SRCDIR/$SCRIPT
