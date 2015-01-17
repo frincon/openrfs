@@ -333,7 +333,7 @@ RECHECK_LOGS = $(TEST_LOGS)
 TEST_SUITE_LOG = test-suite.log
 am__test_logs1 = $(TESTS:=.log)
 am__test_logs2 = $(am__test_logs1:@EXEEXT@.log=.log)
-TEST_LOGS = $(am__test_logs2:.t.log=.log)
+am__test_logs3 = $(am__test_logs2:.t.log=.log)
 T_LOG_COMPILE = $(T_LOG_COMPILER) $(AM_T_LOG_FLAGS) $(T_LOG_FLAGS)
 am__set_b = \
   case '$@' in \
@@ -345,6 +345,8 @@ am__set_b = \
     *) \
       b='$*';; \
   esac
+TEST_LOGS = $(am__test_logs3:.sh.log=.log)
+SH_LOG_COMPILE = $(SH_LOG_COMPILER) $(AM_SH_LOG_FLAGS) $(SH_LOG_FLAGS)
 DIST_SUBDIRS = $(SUBDIRS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
@@ -487,10 +489,13 @@ SUBDIRS = src
 T_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/admin/tap-driver.sh
 
+SH_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+                  $(top_srcdir)/admin/tap-driver.sh
+
 #TESTFILES = tests/general.at tests/posix.at
-TEST_EXTENSIONS = .t
+TEST_EXTENSIONS = .t .sh
 T_LOG_COMPILER = tests/pjd-fstest-wrapper.sh $(top_srcdir)
-TESTS = tests/pjd-fstest-20080816/tests/chown/05.t \
+FS_TESTS = tests/pjd-fstest-20080816/tests/chown/05.t \
 	tests/pjd-fstest-20080816/tests/chown/04.t \
 	tests/pjd-fstest-20080816/tests/chown/00.t \
 	tests/pjd-fstest-20080816/tests/chown/03.t \
@@ -674,10 +679,12 @@ TESTS = tests/pjd-fstest-20080816/tests/chown/05.t \
 	tests/pjd-fstest-20080816/tests/chmod/07.t \
 	tests/pjd-fstest-20080816/tests/chmod/09.t \
 	tests/pjd-fstest-20080816/tests/chmod/01.t
+OTHER_TESTS = tests/test_can_mount.sh
+TESTS = $(FS_TESTS) $(OTHER_TESTS)
 all: all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .log .t .t$(EXEEXT) .trs
+.SUFFIXES: .log .sh .sh$(EXEEXT) .t .t$(EXEEXT) .trs
 am--refresh: Makefile
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -973,6 +980,20 @@ recheck: all
 @am__EXEEXT_TRUE@	$(am__check_pre) $(T_LOG_DRIVER) --test-name "$$f" \
 @am__EXEEXT_TRUE@	--log-file $$b.log --trs-file $$b.trs \
 @am__EXEEXT_TRUE@	$(am__common_driver_flags) $(AM_T_LOG_DRIVER_FLAGS) $(T_LOG_DRIVER_FLAGS) -- $(T_LOG_COMPILE) \
+@am__EXEEXT_TRUE@	"$$tst" $(AM_TESTS_FD_REDIRECT)
+.sh.log:
+	@p='$<'; \
+	$(am__set_b); \
+	$(am__check_pre) $(SH_LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_SH_LOG_DRIVER_FLAGS) $(SH_LOG_DRIVER_FLAGS) -- $(SH_LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+@am__EXEEXT_TRUE@.sh$(EXEEXT).log:
+@am__EXEEXT_TRUE@	@p='$<'; \
+@am__EXEEXT_TRUE@	$(am__set_b); \
+@am__EXEEXT_TRUE@	$(am__check_pre) $(SH_LOG_DRIVER) --test-name "$$f" \
+@am__EXEEXT_TRUE@	--log-file $$b.log --trs-file $$b.trs \
+@am__EXEEXT_TRUE@	$(am__common_driver_flags) $(AM_SH_LOG_DRIVER_FLAGS) $(SH_LOG_DRIVER_FLAGS) -- $(SH_LOG_COMPILE) \
 @am__EXEEXT_TRUE@	"$$tst" $(AM_TESTS_FD_REDIRECT)
 
 distdir: $(DISTFILES)
