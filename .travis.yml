@@ -4,5 +4,5 @@ before_install:
  - sudo apt-get install -qq librsync-dev libconfuse-dev libfuse-dev
 compiler:
   - gcc
-script: ./configure --disable-maintainer-mode && make && sudo make check
+script: ./configure --disable-maintainer-mode && make && make check
 after_script: find tests -type f -name "*.log" -exec cat {} \;
