@@ -9,7 +9,7 @@ fi
 echo 1..1
 
 if [ ! -c /dev/fuse ] || [ ! -w /dev/fuse ]; then
-	echo not ok 1 # SKIP Fuse is not available
+	echo "not ok 1 # SKIP Fuse is not available"
 	exit 0
 fi
 
