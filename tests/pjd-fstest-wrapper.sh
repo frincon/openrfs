@@ -5,6 +5,14 @@ if [ "$UID" != "0" ]; then
 	echo "ok 1 # SKIP Must be run as root"
 	exit
 fi
+if [ ! -c /dev/fuse ] || [ ! -w /dev/fuse ]; then
+	echo 1..1
+	echo "not ok 1 # SKIP Fuse is not available"
+	exit 0
+fi
+
+
+
 TOP_SRCDIR=`readlink -f $1`
 SCRIPT=$2
 
