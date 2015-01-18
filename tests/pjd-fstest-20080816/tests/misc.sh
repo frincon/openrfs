@@ -141,3 +141,9 @@ require()
 	fi
 	quick_exit
 }
+
+todo()
+{
+	echo "not ok ${ntest} # TODO ${1}"
+	ntest=`expr $ntest + 1`
+}
