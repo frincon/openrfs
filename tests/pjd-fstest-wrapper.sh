@@ -7,7 +7,7 @@ if [ "$UID" != "0" ]; then
 fi
 if [ ! -c /dev/fuse ] || [ ! -w /dev/fuse ]; then
 	echo 1..1
-	echo "not ok 1 # SKIP Fuse is not available"
+	echo "ok 1 # SKIP Fuse is not available"
 	exit 0
 fi
 
