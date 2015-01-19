@@ -18,7 +18,7 @@ addons:
 language: c
 before_install:
  - sudo apt-get update -qq
- - sudo apt-get install -qq librsync-dev libconfuse-dev libfuse-dev
+ - sudo apt-get install -qq librsync-dev libconfuse-dev libfuse-dev check
 compiler:
   - gcc
 script: ./configure --disable-maintainer-mode && make && sudo make check
