@@ -4,15 +4,6 @@ env:
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "dDD71tRl19d9XyMQh8Y6di5CLNgGa0/w3OC2XVF2uV6IltXFepHWiEU+8FTzZiSeadTxC6am9CTr3HTXkjaaJuiA9HnPRD+QQxy0SmWqQJMnSN9v4GAvKps2Cs7aQm7/exgz+yp5sl4EHF9vrvX9P852h9GdbbU5ZIZrJKjLINM="
 
-language: c
-before_install:
- - sudo apt-get update -qq
- - sudo apt-get install -qq librsync-dev libconfuse-dev libfuse-dev
-compiler:
-  - gcc
-script: ./configure --disable-maintainer-mode && make && sudo make check
-after_script: find tests -type f -name "*.log" -exec cat {} \;
-
 addons:
   coverity_scan:
     project:
@@ -22,3 +13,14 @@ addons:
     build_command_prepend: "./configure; make clean"
     build_command:   "make -j 4"
     branch_pattern: coverity_scan
+
+
+language: c
+before_install:
+ - sudo apt-get update -qq
+ - sudo apt-get install -qq librsync-dev libconfuse-dev libfuse-dev
+compiler:
+  - gcc
+script: ./configure --disable-maintainer-mode && make && sudo make check
+after_script: find tests -type f -name "*.log" -exec cat {} \;
+
