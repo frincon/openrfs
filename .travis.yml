@@ -12,7 +12,7 @@ addons:
     notification_email: frm.rincon@gmail.com
     build_command_prepend: "./configure; make clean"
     build_command:   "make -j 4"
-    branch_pattern: coverity_scan
+    branch_pattern: master
 
 
 language: c
