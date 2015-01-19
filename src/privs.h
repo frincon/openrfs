@@ -11,7 +11,7 @@
 #include <sys/types.h>
 
 void
-openrfs_drop_privs ();
+openrfs_drop_privs (uid_t uid, gid_t gid);
 
 void
 openrfs_restore_privs ();

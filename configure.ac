@@ -4,7 +4,7 @@ AC_PREREQ([2.69])
 AC_INIT([openrfs],[0.1.1])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_AUX_DIR([admin])
-AC_CONFIG_FILES(Makefile src/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile tests/Makefile)
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AC_CONFIG_TESTDIR([.],[src])
 
@@ -19,6 +19,7 @@ AM_PROG_CC_C_O
 AC_GNU_SOURCE
 
 PKG_CHECK_MODULES([FUSE], [fuse])
+PKG_CHECK_MODULES(CHECK, [check >= 0.9.4])
 #AC_DEFINE_UNQUOTED([_FILE_OFFSET_BITS],[64],[Define LFS support])
 AC_DEFINE_UNQUOTED([FUSE_USE_VERSION],[26],[Define fuse version])
 AM_MISSING_PROG([AUTOM4TE], [autom4te])

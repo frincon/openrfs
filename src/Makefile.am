@@ -1,5 +1,5 @@
 bin_PROGRAMS=openrfs
-openrfs_SOURCES=openrfs.c utils.c privs.c
+openrfs_SOURCES=openrfs.c utils.c privs.c openrfs_fuse.c
 openrfs_CFLAGS=@FUSE_CFLAGS@
 openrfs_LDADD=@FUSE_LIBS@
 
