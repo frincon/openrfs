@@ -50,6 +50,8 @@
 #include "utils.h"
 #include "openrfs_fuse.h"
 #include "openrfs.h"
+#include "events.h"
+#include "openrfs_time.h"
 
 enum
 {
@@ -245,6 +247,7 @@ xmp_mknod (const char *path, mode_t mode, dev_t rdev)
   if (res == -1)
     return -errno;
 
+  openrfs_on_modify(path, current_timestamp());
   return 0;
 }
 
@@ -263,6 +266,7 @@ xmp_mkdir (const char *path, mode_t mode)
       return -errno;
     }
 
+  openrfs_on_modify(path, current_timestamp());
   return 0;
 }
 
@@ -279,6 +283,7 @@ xmp_unlink (const char *path)
   if (res == -1)
     return -errno;
 
+  openrfs_on_delete(path, current_timestamp());
   return 0;
 }
 
@@ -295,6 +300,7 @@ xmp_rmdir (const char *path)
   if (res == -1)
     return -errno;
 
+  openrfs_on_delete(path, current_timestamp());
   return 0;
 }
 
@@ -311,6 +317,7 @@ xmp_symlink (const char *from, const char *to)
   if (res == -1)
     return -errno;
 
+  openrfs_on_modify(to, current_timestamp());
   return 0;
 }
 
@@ -330,6 +337,9 @@ xmp_rename (const char *from, const char *to)
   if (res == -1)
     return -errno;
 
+  // TODO Make more clever with one operation
+  openrfs_on_delete(from, current_timestamp());
+  openrfs_on_modify(from, current_timestamp());
   return 0;
 }
 
@@ -349,6 +359,8 @@ xmp_link (const char *from, const char *to)
   if (res == -1)
     return -errno;
 
+  // TODO This operation has to be handle in different way (inode number)
+  openrfs_on_modify(from, current_timestamp());
   return 0;
 }
 
@@ -365,6 +377,8 @@ xmp_chmod (const char *path, mode_t mode)
   if (res == -1)
     return -errno;
 
+  // TODO This operation has to be handle more clever for performance to avoid check complete file
+  openrfs_on_modify(path, current_timestamp());
   return 0;
 }
 
@@ -382,6 +396,8 @@ xmp_chown (const char *path, uid_t uid, gid_t gid)
   if (res == -1)
     return -errno;
 
+  // TODO This operation has to be handle more clever for performance to avoid check complete file
+  openrfs_on_modify(path, current_timestamp());
   return 0;
 }
 
@@ -399,6 +415,7 @@ xmp_truncate (const char *path, off_t size)
   if (res == -1)
     return -errno;
 
+  openrfs_on_modify(path, current_timestamp());
   return 0;
 }
 
@@ -413,6 +430,7 @@ xmp_ftruncate (const char *path, off_t size, struct fuse_file_info *fi)
   if (res == -1)
     return -errno;
 
+  openrfs_on_modify(path, current_timestamp());
   return 0;
 }
 
@@ -435,6 +453,7 @@ xmp_utimens (const char *path, const struct timespec ts[2])
   if (res == -1)
     return -errno;
 
+  // TODO Should We do this remotely?
   return 0;
 }
 
@@ -545,6 +564,10 @@ xmp_release (const char *path, struct fuse_file_info *fi)
   close (fi->fh);
   openrfs_fuse_restore_privs ();
 
+  if (!(fi->flags & O_RDONLY)) {
+	  openrfs_on_modify(path, current_timestamp());
+  }
+
   return 0;
 }
 
@@ -586,6 +609,7 @@ xmp_setxattr (const char *path, const char *name, const char *value,
   if (res == -1)
     return -errno;
 
+  openrfs_on_modify(path, current_timestamp());
   return 0;
 }
 
@@ -631,6 +655,9 @@ xmp_removexattr (const char *path, const char *name)
   openrfs_fuse_restore_privs ();
   if (res == -1)
     return -errno;
+
+  // TODO Avoid check of complete file
+  openrfs_on_modify(path, current_timestamp());
   return 0;
 }
 #endif /* HAVE_SETXATTR */

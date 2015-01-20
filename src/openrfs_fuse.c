@@ -13,8 +13,6 @@
 
 #include <fuse.h>
 
-
-
 void
 openrfs_fuse_drop_privs()
 {

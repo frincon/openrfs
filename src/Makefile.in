@@ -91,7 +91,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_openrfs_OBJECTS = openrfs-openrfs.$(OBJEXT) openrfs-utils.$(OBJEXT) \
-	openrfs-privs.$(OBJEXT) openrfs-openrfs_fuse.$(OBJEXT)
+	openrfs-privs.$(OBJEXT) openrfs-openrfs_fuse.$(OBJEXT) \
+	openrfs-events.$(OBJEXT) openrfs-openrfs_time.$(OBJEXT)
 openrfs_OBJECTS = $(am_openrfs_OBJECTS)
 openrfs_DEPENDENCIES =
 openrfs_LINK = $(CCLD) $(openrfs_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -253,7 +254,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-openrfs_SOURCES = openrfs.c utils.c privs.c openrfs_fuse.c
+openrfs_SOURCES = openrfs.c utils.c privs.c openrfs_fuse.c events.c openrfs_time.c
 openrfs_CFLAGS = @FUSE_CFLAGS@
 openrfs_LDADD = @FUSE_LIBS@
 all: config.h
@@ -359,8 +360,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-events.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-openrfs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-openrfs_fuse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-openrfs_time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-privs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openrfs-utils.Po@am__quote@
 
@@ -433,6 +436,34 @@ openrfs-openrfs_fuse.obj: openrfs_fuse.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='openrfs_fuse.c' object='openrfs-openrfs_fuse.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-openrfs_fuse.obj `if test -f 'openrfs_fuse.c'; then $(CYGPATH_W) 'openrfs_fuse.c'; else $(CYGPATH_W) '$(srcdir)/openrfs_fuse.c'; fi`
+
+openrfs-events.o: events.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-events.o -MD -MP -MF $(DEPDIR)/openrfs-events.Tpo -c -o openrfs-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-events.Tpo $(DEPDIR)/openrfs-events.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='events.c' object='openrfs-events.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-events.o `test -f 'events.c' || echo '$(srcdir)/'`events.c
+
+openrfs-events.obj: events.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-events.obj -MD -MP -MF $(DEPDIR)/openrfs-events.Tpo -c -o openrfs-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-events.Tpo $(DEPDIR)/openrfs-events.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='events.c' object='openrfs-events.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-events.obj `if test -f 'events.c'; then $(CYGPATH_W) 'events.c'; else $(CYGPATH_W) '$(srcdir)/events.c'; fi`
+
+openrfs-openrfs_time.o: openrfs_time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-openrfs_time.o -MD -MP -MF $(DEPDIR)/openrfs-openrfs_time.Tpo -c -o openrfs-openrfs_time.o `test -f 'openrfs_time.c' || echo '$(srcdir)/'`openrfs_time.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-openrfs_time.Tpo $(DEPDIR)/openrfs-openrfs_time.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='openrfs_time.c' object='openrfs-openrfs_time.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-openrfs_time.o `test -f 'openrfs_time.c' || echo '$(srcdir)/'`openrfs_time.c
+
+openrfs-openrfs_time.obj: openrfs_time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -MT openrfs-openrfs_time.obj -MD -MP -MF $(DEPDIR)/openrfs-openrfs_time.Tpo -c -o openrfs-openrfs_time.obj `if test -f 'openrfs_time.c'; then $(CYGPATH_W) 'openrfs_time.c'; else $(CYGPATH_W) '$(srcdir)/openrfs_time.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/openrfs-openrfs_time.Tpo $(DEPDIR)/openrfs-openrfs_time.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='openrfs_time.c' object='openrfs-openrfs_time.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(openrfs_CFLAGS) $(CFLAGS) -c -o openrfs-openrfs_time.obj `if test -f 'openrfs_time.c'; then $(CYGPATH_W) 'openrfs_time.c'; else $(CYGPATH_W) '$(srcdir)/openrfs_time.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
