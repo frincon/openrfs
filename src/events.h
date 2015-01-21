@@ -10,12 +10,10 @@
 
 #include "config.h"
 
-#include <time.h>
+void
+openrfs_on_modify(const char *path);
 
 void
-openrfs_on_modify(const char *path, const struct timespec *tp);
-
-void
-openrfs_on_delete(const char *path, const struct timespec *tp);
+openrfs_on_delete(const char *path);
 
 #endif /* SRC_EVENTS_H_ */

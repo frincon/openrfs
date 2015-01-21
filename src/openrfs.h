@@ -35,6 +35,7 @@ typedef struct _configuration
   int peer_port;
   char *database;
   char *conflicts;
+  char *log_file;
   int debug_level;
 
 } configuration;

@@ -22,6 +22,7 @@
 #define UTILS_H_
 
 #include <pthread.h>
+#include <stdio.h>
 
 #ifndef OPENRFS_TRACE_LEVEL
 #define OPENRFS_TRACE_LEVEL UTILS_INFO
@@ -34,6 +35,12 @@ enum
   UTILS_ALL, UTILS_TRACE, UTILS_DEBUG, UTILS_INFO, UTILS_WARNING, UTILS_ERROR,
   UTILS_FATAL
 };
+
+void
+utils_set_log_stream(FILE *stream);
+
+void
+utils_set_log_debug_level(int level);
 
 void
 utils_log (int level, const char *file_name, const char *function,

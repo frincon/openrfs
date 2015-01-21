@@ -51,7 +51,6 @@
 #include "openrfs_fuse.h"
 #include "openrfs.h"
 #include "events.h"
-#include "openrfs_time.h"
 
 enum
 {
@@ -247,7 +246,7 @@ xmp_mknod (const char *path, mode_t mode, dev_t rdev)
   if (res == -1)
     return -errno;
 
-  openrfs_on_modify(path, current_timestamp());
+  openrfs_on_modify(path);
   return 0;
 }
 
@@ -266,7 +265,7 @@ xmp_mkdir (const char *path, mode_t mode)
       return -errno;
     }
 
-  openrfs_on_modify(path, current_timestamp());
+  openrfs_on_modify(path);
   return 0;
 }
 
@@ -283,7 +282,7 @@ xmp_unlink (const char *path)
   if (res == -1)
     return -errno;
 
-  openrfs_on_delete(path, current_timestamp());
+  openrfs_on_delete(path);
   return 0;
 }
 
@@ -300,7 +299,7 @@ xmp_rmdir (const char *path)
   if (res == -1)
     return -errno;
 
-  openrfs_on_delete(path, current_timestamp());
+  openrfs_on_delete(path);
   return 0;
 }
 
@@ -317,7 +316,7 @@ xmp_symlink (const char *from, const char *to)
   if (res == -1)
     return -errno;
 
-  openrfs_on_modify(to, current_timestamp());
+  openrfs_on_modify(to);
   return 0;
 }
 
@@ -338,8 +337,8 @@ xmp_rename (const char *from, const char *to)
     return -errno;
 
   // TODO Make more clever with one operation
-  openrfs_on_delete(from, current_timestamp());
-  openrfs_on_modify(from, current_timestamp());
+  openrfs_on_delete(from);
+  openrfs_on_modify(from);
   return 0;
 }
 
@@ -360,7 +359,7 @@ xmp_link (const char *from, const char *to)
     return -errno;
 
   // TODO This operation has to be handle in different way (inode number)
-  openrfs_on_modify(from, current_timestamp());
+  openrfs_on_modify(from);
   return 0;
 }
 
@@ -378,7 +377,7 @@ xmp_chmod (const char *path, mode_t mode)
     return -errno;
 
   // TODO This operation has to be handle more clever for performance to avoid check complete file
-  openrfs_on_modify(path, current_timestamp());
+  openrfs_on_modify(path);
   return 0;
 }
 
@@ -397,7 +396,7 @@ xmp_chown (const char *path, uid_t uid, gid_t gid)
     return -errno;
 
   // TODO This operation has to be handle more clever for performance to avoid check complete file
-  openrfs_on_modify(path, current_timestamp());
+  openrfs_on_modify(path);
   return 0;
 }
 
@@ -415,7 +414,7 @@ xmp_truncate (const char *path, off_t size)
   if (res == -1)
     return -errno;
 
-  openrfs_on_modify(path, current_timestamp());
+  openrfs_on_modify(path);
   return 0;
 }
 
@@ -430,7 +429,7 @@ xmp_ftruncate (const char *path, off_t size, struct fuse_file_info *fi)
   if (res == -1)
     return -errno;
 
-  openrfs_on_modify(path, current_timestamp());
+  openrfs_on_modify(path);
   return 0;
 }
 
@@ -565,7 +564,7 @@ xmp_release (const char *path, struct fuse_file_info *fi)
   openrfs_fuse_restore_privs ();
 
   if (!(fi->flags & O_RDONLY)) {
-	  openrfs_on_modify(path, current_timestamp());
+	  openrfs_on_modify(path);
   }
 
   return 0;
@@ -609,7 +608,7 @@ xmp_setxattr (const char *path, const char *name, const char *value,
   if (res == -1)
     return -errno;
 
-  openrfs_on_modify(path, current_timestamp());
+  openrfs_on_modify(path);
   return 0;
 }
 
@@ -657,7 +656,7 @@ xmp_removexattr (const char *path, const char *name)
     return -errno;
 
   // TODO Avoid check of complete file
-  openrfs_on_modify(path, current_timestamp());
+  openrfs_on_modify(path);
   return 0;
 }
 #endif /* HAVE_SETXATTR */
@@ -717,6 +716,8 @@ static struct fuse_operations xmp_oper = {
 
 static struct fuse_opt myfs_opts[] = {
   OPENRFS_OPT ("path=%s", path, 0),
+  OPENRFS_OPT ("log-file=%s", log_file, 0),
+  OPENRFS_OPT ("debug-level=%i", debug_level, OPENRFS_TRACE_LEVEL),
   FUSE_OPT_KEY ("-V", KEY_VERSION),
   FUSE_OPT_KEY ("--version", KEY_VERSION),
   FUSE_OPT_KEY ("-h", KEY_HELP),
@@ -770,7 +771,23 @@ main (int argc, char **argv)
       exit (EXIT_FAILURE);
     }
 
+  FILE *log_stream = NULL;
+  if (config.log_file != NULL) {
+	  log_stream = fopen(config.log_file, "a");
+	  if(log_stream == NULL) {
+		  utils_error ("The log file '%s' cannot be opened: %s", config.log_file, strerror(errno) );
+		  exit (EXIT_FAILURE);
+	  }
+
+	  utils_set_log_stream(log_stream);
+  }
+  utils_set_log_debug_level(config.debug_level);
+
   int ret = fuse_main (args.argc, args.argv, &xmp_oper, NULL);
+
+  if (log_stream != NULL) {
+	  fclose(log_stream);
+  }
 
   return ret;
 }

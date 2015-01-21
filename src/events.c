@@ -7,18 +7,19 @@
 
 #include "config.h"
 
-#include <time.h>
+
+#include "utils.h"
 
 #include "events.h"
 
 void
-openrfs_on_modify(const char *path, const struct timespec *tp)
+openrfs_on_modify(const char *path)
 {
-	(void) 0;
+	utils_trace("On Modify received for path '%s'", path);
 }
 
 void
-openrfs_on_delete(const char *path, const struct timespec *tp)
+openrfs_on_delete(const char *path)
 {
-	(void) 0;
+	utils_trace("On Delete received for path '%s'", path);
 }

@@ -26,14 +26,25 @@
 #include "openrfs.h"
 #include "utils.h"
 
+static FILE *current_stream = NULL;
+static int debug_level = OPENRFS_TRACE_LEVEL;
 
+void
+utils_set_log_stream(FILE *stream) {
+	current_stream = stream;
+}
+
+void
+utils_set_log_debug_level(int level) {
+	debug_level = level;
+}
 
 void
 utils_log (int level, const char *file_name, const char *function,
 	   const char *template, ...)
 {
   va_list arguments;
-  if (level >= OPENRFS_TRACE_LEVEL)
+  if (level >= debug_level)
     {
       // TODO Make this with dynamic memory allocation
       char buf[1000];
@@ -59,6 +70,6 @@ utils_log (int level, const char *file_name, const char *function,
 	}
 
       va_end (arguments);
-      fputs (message, stderr);
+      fputs (message, current_stream == NULL ? stderr : current_stream);
     }
 }
